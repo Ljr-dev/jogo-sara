@@ -39,8 +39,11 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 
 /* ===== MAPA ===== */
 .map-container{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0}
-.map{display:flex;align-items:center;gap:clamp(8px,2vw,30px);flex-wrap:nowrap;justify-content:center}
-.map-step{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.map{display:flex;flex-direction:column;align-items:center;gap:6px}
+.map-row{display:flex;align-items:center;gap:clamp(6px,2vw,24px);justify-content:center}
+.map-row-connector{font-size:clamp(18px,3vw,28px);color:#d4a574;animation:bounce 1.5s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.map-step{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
 .map-circle{width:clamp(90px,18vw,160px);height:clamp(90px,18vw,160px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(40px,8vw,70px);cursor:pointer;transition:all .2s;position:relative;border:4px solid transparent}
 .map-circle:active{transform:scale(.9)}
 .map-circle.step-1{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-color:#66bb6a;box-shadow:0 6px 25px rgba(102,187,106,.35)}
@@ -161,6 +164,11 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .main .learn-header{gap:8px}
 .main .learn-header h1{font-size:clamp(18px,4.5vw,24px)}
 .main .learn-header .level-badge{font-size:clamp(10px,2.5vw,13px);padding:3px 12px}
+.map-row{gap:clamp(4px,1.5vw,14px)}
+.map-circle{width:clamp(60px,16vw,100px);height:clamp(60px,16vw,100px);font-size:clamp(26px,6vw,40px)}
+.map-step-label{font-size:clamp(9px,1.5vw,13px);max-width:90px}
+.map-connector{font-size:clamp(12px,2vw,20px)}
+.map-row-connector{font-size:clamp(14px,2.5vw,22px)}
 .modal-content{width:94vw;padding:clamp(12px,3vw,20px);border-radius:20px}
 .modal-title{font-size:clamp(16px,4vw,22px);margin-bottom:12px;padding-right:36px}
 .modal-close{top:8px;right:10px;font-size:28px;width:36px;height:36px}
@@ -183,11 +191,11 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .sidebar-btn .label{font-size:6.5px;letter-spacing:.2px}
 .main{padding:8px 10px}
 .main .learn-header h1{font-size:clamp(16px,4vw,20px)}
-.map{flex-direction:column;gap:4px}
-.map-connector{transform:rotate(90deg);font-size:18px}
-.map-circle{width:clamp(65px,22vw,90px);height:clamp(65px,22vw,90px);font-size:clamp(28px,8vw,38px);border-width:3px}
-.map-step-label{font-size:clamp(10px,2vw,13px);max-width:90px}
-.map-step{gap:4px}
+.map-row{gap:clamp(4px,1.5vw,12px)}
+.map-connector{font-size:14px}
+.map-row-connector{font-size:14px}
+.map-circle{width:clamp(55px,20vw,80px);height:clamp(55px,20vw,80px);font-size:clamp(24px,7vw,34px);border-width:3px}
+.map-step-label{font-size:clamp(9px,1.8vw,12px);max-width:80px}
 .animal-card{width:clamp(80px,28vw,110px);height:clamp(80px,28vw,110px)}
 .letter-card{width:clamp(55px,22vw,85px);height:clamp(55px,22vw,85px)}
 .letter-card .letter-char{font-size:clamp(22px,8vw,36px)}
@@ -211,6 +219,12 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .sidebar-btn .icon{font-size:15px}
 .sidebar-btn .label{font-size:5.5px;letter-spacing:.1px;display:none}
 .main{padding:6px 8px}
+.map-row{gap:clamp(3px,1vw,8px)}
+.map-circle{width:clamp(44px,20vw,62px);height:clamp(44px,20vw,62px);font-size:clamp(18px,7vw,26px)}
+.map-step-label{font-size:clamp(7px,2vw,10px);max-width:60px}
+.map-step{gap:3px}
+.map-connector{font-size:10px}
+.map-row-connector{font-size:12px}
 .modal-content{padding:10px;width:96vw;border-radius:16px;border-width:3px}
 .animal-card{width:clamp(65px,30vw,90px);height:clamp(65px,30vw,90px);border-radius:14px;padding:6px}
 .animal-card .animal-emoji{font-size:clamp(28px,12vw,40px)}
@@ -236,10 +250,11 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .sidebar-btn .label{font-size:6px;display:none}
 .main{padding:6px 10px}
 .main .learn-header{margin-bottom:6px}
-.map-circle{width:clamp(50px,12vw,80px);height:clamp(50px,12vw,80px);font-size:clamp(22px,5vw,32px)}
-.map-step-label{font-size:clamp(8px,1.2vw,11px)}
-.map-connector{font-size:clamp(12px,2vw,16px)}
-.map{gap:2px}
+.map-circle{width:clamp(44px,10vw,70px);height:clamp(44px,10vw,70px);font-size:clamp(18px,4vw,28px)}
+.map-row{gap:clamp(4px,1.5vw,14px)}
+.map-step-label{font-size:clamp(7px,1vw,10px);max-width:70px}
+.map-connector{font-size:clamp(10px,1.5vw,14px)}
+.map-row-connector{font-size:clamp(12px,2vw,18px)}
 .animal-card{width:clamp(60px,15vw,90px);height:clamp(60px,15vw,90px)}
 .letter-card{width:clamp(50px,12vw,70px);height:clamp(50px,12vw,70px)}
 .letter-big{font-size:clamp(40px,10vw,70px)!important}
@@ -248,8 +263,10 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .tracing-letter-btn{width:clamp(28px,6vw,36px);height:clamp(28px,6vw,36px);font-size:clamp(14px,3vw,18px)}
 }
 @media(max-height:400px) and (orientation:landscape){
-.map-circle{width:clamp(40px,10vw,60px);height:clamp(40px,10vw,60px);font-size:clamp(18px,4vw,26px)}
+.map-circle{width:clamp(34px,8vw,50px);height:clamp(34px,8vw,50px);font-size:clamp(16px,3.5vw,22px)}
 .map-step-label{display:none}
+.map-row-connector{display:none}
+.map-row{gap:clamp(2px,1vw,8px)}
 .main{padding:4px 8px}
 }
 </style>
@@ -283,29 +300,40 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
     </div>
     <div class="map-container">
       <div class="map" id="gameMap">
-        <!-- Nível 1: Vogais -->
-        <div class="map-step">
-          <div class="map-circle step-1" id="level1Btn" data-level="1">
-            🅰️
+        <!-- LINHA 1 -->
+        <div class="map-row">
+          <div class="map-step">
+            <div class="map-circle step-1" id="level1Btn" data-level="1">🅰️</div>
+            <span class="map-step-label">VOGAIS<br><small>A, E, I, O, U</small></span>
           </div>
-          <span class="map-step-label">VOGAIS<br><small>A, E, I, O, U</small></span>
+          <span class="map-connector">➡️</span>
+          <div class="map-step">
+            <div class="map-circle step-2" id="level2Btn" data-level="2">🔤</div>
+            <span class="map-step-label">CONSOANTES<br><small>B, C, D, F...</small></span>
+          </div>
+          <span class="map-connector">➡️</span>
+          <div class="map-step">
+            <div class="map-circle step-3" id="level3Btn" data-level="3">✏️<span class="lock-icon">🔒</span></div>
+            <span class="map-step-label">ESCREVER<br><small>PRATIQUE</small></span>
+          </div>
         </div>
-        <span class="map-connector">➡️</span>
-        <!-- Nível 2: Consoantes -->
-        <div class="map-step">
-          <div class="map-circle step-2" id="level2Btn" data-level="2">
-            🔤
+        <!-- LINHA 2 -->
+        <div class="map-row-connector">⬇️</div>
+        <div class="map-row">
+          <div class="map-step">
+            <div class="map-circle step-3" id="level4Btn" data-level="4">📖<span class="lock-icon">🔒</span></div>
+            <span class="map-step-label">LER<br><small>PALAVRAS</small></span>
           </div>
-          <span class="map-step-label">CONSOANTES<br><small>B, C, D, F, G...</small></span>
-        </div>
-        <span class="map-connector">➡️</span>
-        <!-- Nível 3: Escrever -->
-        <div class="map-step">
-          <div class="map-circle step-3" id="level3Btn" data-level="3">
-            ✏️
-            <span class="lock-icon">🔒</span>
+          <span class="map-connector">➡️</span>
+          <div class="map-step">
+            <div class="map-circle step-3" id="level5Btn" data-level="5">🧩<span class="lock-icon">🔒</span></div>
+            <span class="map-step-label">COMPLETAR<br><small>LETRAS</small></span>
           </div>
-          <span class="map-step-label">ESCREVER LETRAS<br><small>PRATIQUE NO QUADRO</small></span>
+          <span class="map-connector">➡️</span>
+          <div class="map-step">
+            <div class="map-circle step-3" id="level6Btn" data-level="6">❓<span class="lock-icon">🔒</span></div>
+            <span class="map-step-label">QUAL E?<br><small>ADIVINHE</small></span>
+          </div>
         </div>
       </div>
     </div>
@@ -397,29 +425,79 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 //  CONFIG - ALFABETO ILUSTRADO
 // ============================================================
 const ALFABETO = {
-  'A': { emoji:'🦅', nome:'AGUIA',   frase:'A de AGUIA!' },
-  'B': { emoji:'🦋', nome:'BORBOLETA',frase:'B de BORBOLETA!' },
-  'C': { emoji:'🐕', nome:'CACHORRO',frase:'C de CACHORRO!' },
-  'D': { emoji:'🐬', nome:'GOLFINHO',frase:'D de GOLFINHO!' },
-  'E': { emoji:'🐘', nome:'ELEFANTE',frase:'E de ELEFANTE!' },
-  'F': { emoji:'🦩', nome:'FLAMINGO',frase:'F de FLAMINGO!' },
-  'G': { emoji:'🐱', nome:'GATO',    frase:'G de GATO!' },
-  'I': { emoji:'🦎', nome:'IGUANA',  frase:'I de IGUANA!' },
-  'J': { emoji:'🐊', nome:'JACARE',  frase:'J de JACARE!' },
-  'L': { emoji:'🦁', nome:'LEAO',    frase:'L DE LEAO!' },
-  'M': { emoji:'🐒', nome:'MACACO',  frase:'M DE MACACO!' },
-  'O': { emoji:'🐑', nome:'OVELHA',  frase:'O DE OVELHA!' },
-  'P': { emoji:'🐧', nome:'PINGUIM', frase:'P DE PINGUIM!' },
-  'S': { emoji:'🐸', nome:'SAPO',    frase:'S DE SAPO!' },
-  'T': { emoji:'🐯', nome:'TIGRE',   frase:'T DE TIGRE!' },
-  'U': { emoji:'🐻', nome:'URSO',    frase:'U DE URSO!' },
-  'V': { emoji:'🐄', nome:'VACA',    frase:'V DE VACA!' },
+  'A': { emoji:'🦅', nome:'AGUIA',    frase:'A DE AGUIA!' },
+  'B': { emoji:'🦋', nome:'BORBOLETA',frase:'B DE BORBOLETA!' },
+  'C': { emoji:'🐕', nome:'CACHORRO', frase:'C DE CACHORRO!' },
+  'D': { emoji:'🐬', nome:'GOLFINHO', frase:'D DE GOLFINHO!' },
+  'E': { emoji:'🐘', nome:'ELEFANTE', frase:'E DE ELEFANTE!' },
+  'F': { emoji:'🦩', nome:'FLAMINGO', frase:'F DE FLAMINGO!' },
+  'G': { emoji:'🐱', nome:'GATO',     frase:'G DE GATO!' },
+  'H': { emoji:'🦛', nome:'HIPOPOTAMO',frase:'H DE HIPOPOTAMO!' },
+  'I': { emoji:'🦎', nome:'IGUANA',   frase:'I DE IGUANA!' },
+  'J': { emoji:'🐊', nome:'JACARE',   frase:'J DE JACARE!' },
+  'L': { emoji:'🦁', nome:'LEAO',     frase:'L DE LEAO!' },
+  'M': { emoji:'🐒', nome:'MACACO',   frase:'M DE MACACO!' },
+  'N': { emoji:'🗒️', nome:'NOTA',    frase:'N DE NOTA!' },
+  'O': { emoji:'🐑', nome:'OVELHA',   frase:'O DE OVELHA!' },
+  'P': { emoji:'🐧', nome:'PINGUIM',  frase:'P DE PINGUIM!' },
+  'Q': { emoji:'🧀', nome:'QUEIJO',   frase:'Q DE QUEIJO!' },
+  'R': { emoji:'🦊', nome:'RAPOSA',   frase:'R DE RAPOSA!' },
+  'S': { emoji:'🐸', nome:'SAPO',     frase:'S DE SAPO!' },
+  'T': { emoji:'🐯', nome:'TIGRE',    frase:'T DE TIGRE!' },
+  'U': { emoji:'🐻', nome:'URSO',     frase:'U DE URSO!' },
+  'V': { emoji:'🐄', nome:'VACA',     frase:'V DE VACA!' },
+  'X': { emoji:'☕',  nome:'XICARA',   frase:'X DE XICARA!' },
+  'Z': { emoji:'🦓', nome:'ZEBRA',    frase:'Z DE ZEBRA!' },
 };
 
+// ============================================================
+//  WORDS - 100+ palavras para treino
+// ============================================================
+const WORDS = [
+  // --- 2 LETRAS ---
+  { w:'BOI', e:'🐂' }, { w:'PAI', e:'👨' }, { w:'MAO', e:'✋' },
+  { w:'PE',  e:'🦶' }, { w:'SOL', e:'☀️' }, { w:'OVO', e:'🥚' },
+  { w:'UVA', e:'🍇' }, { w:'LUZ', e:'💡' }, { w:'SUL', e:'🧭' },
+  // --- 3 LETRAS ---
+  { w:'BOLA', e:'⚽' }, { w:'CASA', e:'🏠' }, { w:'GATO', e:'🐱' },
+  { w:'SAPO', e:'🐸' }, { w:'PATO', e:'🦆' }, { w:'VACA', e:'🐄' },
+  { w:'LUA',  e:'🌙' }, { w:'BOLO', e:'🎂' }, { w:'DADO', e:'🎲' },
+  { w:'FOGO', e:'🔥' }, { w:'SACO', e:'🛍️' }, { w:'POTE', e:'🫙' },
+  { w:'MALA', e:'🧳' }, { w:'CAMA', e:'🛏️' }, { w:'BOCA', e:'👄' },
+  { w:'VELA', e:'🕯️' },{ w:'PIPA', e:'🪁' }, { w:'BOTA', e:'👢' },
+  { w:'MEIA', e:'🧦' }, { w:'RATO', e:'🐀' }, { w:'LEAO', e:'🦁' },
+  { w:'URSO', e:'🐻' }, { w:'GALO', e:'🐓' }, { w:'TATU', e:'🦔' },
+  { w:'BODE', e:'🐐' }, { w:'COLA', e:'🧴' }, { w:'MOTA', e:'🏍️' },
+  { w:'PESO', e:'🏋️' },{ w:'TETO', e:'🏠' }, { w:'MESA', e:'🪑' },
+  { w:'POTE', e:'🫙' }, { w:'GOTA', e:'💧' }, { w:'NUVEM',e:'☁️' },
+  // --- 4 LETRAS ---
+  { w:'TIGRE', e:'🐯' }, { w:'OVELHA',e:'🐑' }, { w:'IGUANA',e:'🦎' },
+  { w:'JACARE',e:'🐊' }, { w:'ABELHA',e:'🐝' }, { w:'PINGUIM',e:'🐧' },
+  { w:'FOCA',  e:'🦭' }, { w:'BANANA',e:'🍌' }, { w:'LARANJA',e:'🍊' },
+  { w:'SAPATO',e:'👞' }, { w:'LIVRO', e:'📖' }, { w:'MOCHILA',e:'🎒' },
+  { w:'PIZZA', e:'🍕' }, { w:'BOMBA', e:'💣' }, { w:'CINCO', e:'5️⃣' },
+  { w:'CHAVE', e:'🔑' }, { w:'MILHO', e:'🌽' }, { w:'PILHA', e:'🔋' },
+  { w:'DEDO',  e:'🫵' }, { w:'TELA',  e:'🖥️' }, { w:'MELAO', e:'🍈' },
+  { w:'LIXO',  e:'🗑️' },{ w:'CAJU',  e:'🥭' }, { w:'LIMAO', e:'🍋' },
+  { w:'PAO',   e:'🍞' }, { w:'MAMAO', e:'🥝' }, { w:'SINO',  e:'🔔' },
+  { w:'MACA',  e:'🍎' }, { w:'PAVAO', e:'🦚' }, { w:'FOCA',  e:'🦭' },
+  // --- 5+ LETRAS ---
+  { w:'BICICLETA',e:'🚲' },{ w:'CHOCOLATE',e:'🍫' },{ w:'BORBOLETA',e:'🦋' },
+  { w:'ELEFANTE', e:'🐘' },{ w:'CACHORRO', e:'🐕' },{ w:'GOLFINHO', e:'🐬' },
+  { w:'MORANGO',  e:'🍓' },{ w:'MELANCIA', e:'🍉' },{ w:'SORVETE',  e:'🍦' },
+  { w:'ARVORE',   e:'🌳' },{ w:'FLAMINGO', e:'🦩' },{ w:'TARTARUGA',e:'🐢' },
+  { w:'ESCALADA', e:'🧗' },{ w:'GIRASSOL', e:'🌻' },{ w:'PIPOCA',   e:'🍿' },
+  { w:'PICANHA',  e:'🥩' },{ w:'LAGOSTA',  e:'🦞' },{ w:'CAMELO',   e:'🐪' },
+  { w:'DINOSSAURO',e:'🦕'},{ w:'CABECA',   e:'👤' },
+];
+
 const LEVELS = [
-  { id: 1, nome:'VOGAIS',    icon:'🅰️', letras:['A','E','I','O','U'],              rounds:3 },
-  { id: 2, nome:'CONSOANTES',icon:'🔤', letras:['B','C','D','F','G','L','M','P','S','T','V'], rounds:3 },
+  { id: 1, nome:'VOGAIS',    icon:'🅰️', letras:['A','E','I','O','U'],                                  rounds:3 },
+  { id: 2, nome:'CONSOANTES',icon:'🔤', letras:['B','C','D','F','G','H','J','L','M','N','P','Q','R','S','T','V','X','Z'], rounds:3 },
   { id: 3, nome:'ESCREVER',  icon:'✏️', letras:['A','E','I','O','U','B','C','D','F','G','L','M','P','S','T','V'], rounds:1, type:'tracing' },
+  { id: 4, nome:'LER',       icon:'📖', rounds:3, type:'word-read' },
+  { id: 5, nome:'COMPLETAR', icon:'🧩', rounds:3, type:'word-complete' },
+  { id: 6, nome:'QUAL E?',   icon:'❓', rounds:3, type:'word-pick' },
 ];
 
 // ============================================================
@@ -438,6 +516,7 @@ let state = {
   gameTarget: null,
   gameOptions: [],
   gameUsedLetters: [],
+  gameUsedWords: [],
   tracingMode: false,
   tracingLetter: null,
 };
@@ -600,24 +679,23 @@ document.querySelectorAll('.sidebar-btn').forEach(btn=>{
 // ============================================================
 function updateMap(){
   const badge = document.getElementById('levelBadge');
-  badge.textContent = `Nível ${state.levelUnlocked}`;
+  badge.textContent = `NÍVEL ${state.levelUnlocked}`;
 
-  [1,2,3].forEach(lvl=>{
+  [1,2,3,4,5,6].forEach(lvl=>{
     const btn = document.getElementById('level'+lvl+'Btn');
+    if(!btn) return;
     const isUnlocked = lvl <= state.levelUnlocked;
     const isCompleted = state.levelsCompleted.includes(lvl);
 
-    // Update circle class
     btn.className = 'map-circle';
     if(isCompleted){
       btn.classList.add('step-2');
     } else if(isUnlocked){
-      btn.classList.add(isCompleted ? 'step-2' : 'step-1');
+      btn.classList.add('step-1');
     } else {
       btn.classList.add('step-3');
     }
 
-    // Lock icon
     let lock = btn.querySelector('.lock-icon');
     if(!isUnlocked){
       if(!lock){
@@ -630,7 +708,6 @@ function updateMap(){
       lock.remove();
     }
 
-    // Completed badge
     let comp = btn.querySelector('.completed-badge');
     if(isCompleted){
       if(!comp){
@@ -643,6 +720,15 @@ function updateMap(){
       comp.remove();
     }
   });
+}
+
+// ============================================================
+//  HELPERS - Words
+// ============================================================
+function getRandomWord(exclude){
+  const pool = WORDS.filter(w => !exclude.includes(w.w));
+  if(pool.length === 0) return WORDS[Math.floor(Math.random()*WORDS.length)];
+  return pool[Math.floor(Math.random()*pool.length)];
 }
 
 // ============================================================
@@ -661,6 +747,7 @@ function startLevel(levelId){
   state.gameRound = 0;
   state.gameRoundsNeeded = level.rounds;
   state.gameUsedLetters = [];
+  state.gameUsedWords = [];
 
   const modal = document.getElementById('gameModal');
   modal.classList.add('open');
@@ -685,30 +772,133 @@ function nextRound(){
   }
 
   state.gameRound++;
-  const targetLetter = getRandomLetter(state.currentLevel, state.gameUsedLetters);
-  state.gameTarget = targetLetter;
-  state.gameUsedLetters.push(targetLetter);
-
   const level = LEVELS.find(l=>l.id===state.currentLevel);
-  const targetData = ALFABETO[targetLetter];
+  const ld = document.getElementById('letterDisplay');
+  const lb = document.getElementById('letterBig');
+  const lh = document.getElementById('letterHint');
+  const mt = document.getElementById('modalTitle');
+  const container = document.getElementById('gameCards');
+  container.innerHTML = '';
 
-  if(state.currentLevel === 3){
-    // Nível 3: mostrar animal, escolher a letra inicial
-    document.getElementById('letterDisplay').style.display = 'block';
-    document.getElementById('letterBig').style.fontSize = 'clamp(50px,12vw,90px)';
-    document.getElementById('letterBig').textContent = targetData.emoji;
-    document.getElementById('letterHint').innerHTML = `QUE LETRA COMECA? <span class="hint-emoji">${targetData.emoji}</span>`;
-    document.getElementById('modalTitle').textContent = '🤔 QUAL E A PRIMEIRA LETRA?';
+  // --- NÍVEL 4: LER PALAVRAS (mostra palavra, escolhe emoji) ---
+  if(state.currentLevel === 4){
+    const word = getRandomWord(state.gameUsedWords || []);
+    state.gameTarget = word.w;
+    state.gameUsedWords = state.gameUsedWords || [];
+    state.gameUsedWords.push(word.w);
 
-    // Options: letras (1 certa + 2 erradas do mesmo nível)
+    ld.style.display = 'block';
+    lb.style.fontSize = 'clamp(36px,10vw,60px)';
+    lb.textContent = word.w;
+    lh.innerHTML = `QUAL FIGURA E ESSA PALAVRA?`;
+    mt.textContent = `📖 LEIA A PALAVRA`;
+
+    const wrongPool = WORDS.filter(w => w.w !== word.w).sort(()=>Math.random()-.5).slice(0,2);
+    const options = [word, ...wrongPool].sort(()=>Math.random()-.5);
+    container.className = 'game-cards';
+
+    options.forEach(opt=>{
+      const card = document.createElement('div');
+      card.className = 'animal-card';
+      card.dataset.id = opt.w;
+      card.innerHTML = `<span class="animal-emoji">${opt.e}</span><span class="animal-name">${opt.w}</span>`;
+      card.addEventListener('click', ()=>handleWordClick(card, opt.w));
+      container.appendChild(card);
+    });
+
+    speak(`LEIA A PALAVRA: ${word.w}`);
+
+  // --- NÍVEL 5: COMPLETAR PALAVRA (emoji + palavra com _ , escolhe letra) ---
+  } else if(state.currentLevel === 5){
+    const word = getRandomWord(state.gameUsedWords || []);
+    state.gameTarget = word.w;
+    state.gameUsedWords = state.gameUsedWords || [];
+    state.gameUsedWords.push(word.w);
+
+    // Pick a random position in the word to blank out
+    const chars = word.w.split('');
+    let pos;
+    // Avoid blanking first/last if word is short, pick a middle letter
+    if(chars.length <= 3){
+      pos = Math.floor(Math.random() * chars.length);
+    } else {
+      pos = 1 + Math.floor(Math.random() * (chars.length - 2));
+    }
+    const missingLetter = chars[pos];
+    const displayChars = chars.map((c,i)=> i===pos ? '_' : c).join(' ');
+
+    ld.style.display = 'block';
+    lb.style.fontSize = 'clamp(16px,5vw,28px)';
+    lb.textContent = `${word.e}  ${displayChars}`;
+    lh.innerHTML = `QUE LETRA FALTA?`;
+    mt.textContent = `🧩 COMPLETE A PALAVRA`;
+
+    // 3 letter options: correct + 2 random from alphabet
+    const alphabetKeys = Object.keys(ALFABETO);
+    let distractors = alphabetKeys.filter(l => l !== missingLetter).sort(()=>Math.random()-.5).slice(0,2);
+    const options = [missingLetter, ...distractors].sort(()=>Math.random()-.5);
+    container.className = 'game-cards';
+
+    options.forEach(letra=>{
+      const card = document.createElement('div');
+      card.className = 'letter-card';
+      card.dataset.id = letra;
+      const d = ALFABETO[letra];
+      card.innerHTML = `<span class="letter-char">${letra}</span><span class="letter-label">${d ? d.nome : ''}</span>`;
+      card.addEventListener('click', ()=>handleCompleteClick(card, letra, missingLetter));
+      container.appendChild(card);
+    });
+
+    speak(`COMPLETE A PALAVRA: QUAL LETRA FALTA?`);
+
+  // --- NÍVEL 6: QUAL E A PALAVRA? (mostra emoji, escolhe palavra) ---
+  } else if(state.currentLevel === 6){
+    const word = getRandomWord(state.gameUsedWords || []);
+    state.gameTarget = word.w;
+    state.gameUsedWords = state.gameUsedWords || [];
+    state.gameUsedWords.push(word.w);
+
+    ld.style.display = 'block';
+    lb.style.fontSize = 'clamp(60px,15vw,100px)';
+    lb.textContent = word.e;
+    lh.innerHTML = `QUAL E A PALAVRA?`;
+    mt.textContent = `❓ QUAL E A PALAVRA?`;
+
+    const wrongPool = WORDS.filter(w => w.w !== word.w).sort(()=>Math.random()-.5).slice(0,2);
+    const options = [word, ...wrongPool].sort(()=>Math.random()-.5);
+    container.className = 'game-cards';
+
+    options.forEach(opt=>{
+      const card = document.createElement('div');
+      card.className = 'letter-card';
+      card.style.width = 'clamp(100px,28vw,180px)';
+      card.style.height = 'clamp(60px,14vw,100px)';
+      card.dataset.id = opt.w;
+      card.innerHTML = `<span class="letter-char" style="font-size:clamp(18px,5vw,30px)">${opt.w}</span>`;
+      card.addEventListener('click', ()=>handlePickClick(card, opt.w));
+      container.appendChild(card);
+    });
+
+    speak(`QUAL PALAVRA E ESSA?`);
+
+  // --- NÍVEL 3: ESCOLHER LETRA INICIAL DO ANIMAL ---
+  } else if(state.currentLevel === 3){
+    const targetLetter = getRandomLetter(state.currentLevel, state.gameUsedLetters);
+    state.gameTarget = targetLetter;
+    state.gameUsedLetters.push(targetLetter);
+    const targetData = ALFABETO[targetLetter];
+
+    ld.style.display = 'block';
+    lb.style.fontSize = 'clamp(50px,12vw,90px)';
+    lb.textContent = targetData.emoji;
+    lh.innerHTML = `QUE LETRA COMECA? <span class="hint-emoji">${targetData.emoji}</span>`;
+    mt.textContent = '🤔 QUAL E A PRIMEIRA LETRA?';
+
     let distractors = level.letras.filter(l => l !== targetLetter);
     distractors = distractors.sort(()=>Math.random()-.5).slice(0,2);
     const options = [targetLetter, ...distractors].sort(()=>Math.random()-.5);
-    state.gameOptions = options;
-
-    const container = document.getElementById('gameCards');
-    container.innerHTML = '';
     container.className = 'game-cards';
+
     options.forEach(letra=>{
       const d = ALFABETO[letra];
       const card = document.createElement('div');
@@ -720,23 +910,26 @@ function nextRound(){
     });
 
     speak(`QUAL E A PRIMEIRA LETRA DE ${targetData.nome}?`);
-  } else {
-    // Níveis 1 e 2: mostrar letra, escolher o animal
-    document.getElementById('letterDisplay').style.display = 'block';
-    document.getElementById('letterBig').style.fontSize = 'clamp(80px,20vw,160px)';
-    document.getElementById('letterBig').textContent = targetLetter;
-    document.getElementById('letterHint').innerHTML = `ENCONTRE O ANIMAL QUE COMECA COM <strong>${targetLetter}</strong>`;
-    document.getElementById('modalTitle').textContent = `🔤 LETRA ${targetLetter}`;
 
-    // Options: animais que começam com letras do nível
+  // --- NÍVEIS 1 e 2: MOSTRAR LETRA, ESCOLHER ANIMAL ---
+  } else {
+    const targetLetter = getRandomLetter(state.currentLevel, state.gameUsedLetters);
+    state.gameTarget = targetLetter;
+    state.gameUsedLetters.push(targetLetter);
+    const targetData = ALFABETO[targetLetter];
+
+    ld.style.display = 'block';
+    lb.style.fontSize = 'clamp(80px,20vw,160px)';
+    lb.textContent = targetLetter;
+    lh.innerHTML = `ENCONTRE O ANIMAL QUE COMECA COM <strong>${targetLetter}</strong>`;
+    mt.textContent = `🔤 LETRA ${targetLetter}`;
+
     let allAnimals = level.letras.map(l => ({ letter: l, data: ALFABETO[l] })).filter(x => x.data);
     let correct = allAnimals.find(a => a.letter === targetLetter);
     let wrongPool = allAnimals.filter(a => a.letter !== targetLetter).sort(()=>Math.random()-.5).slice(0,2);
     const options = [correct, ...wrongPool].sort(()=>Math.random()-.5);
-
-    const container = document.getElementById('gameCards');
-    container.innerHTML = '';
     container.className = 'game-cards';
+
     options.forEach(opt=>{
       const card = document.createElement('div');
       card.className = 'animal-card';
@@ -764,18 +957,11 @@ function handleAnimalClick(card, letter){
     triggerCelebration();
     const data = ALFABETO[letter];
     speak(data ? data.frase : 'ISSO AI!');
-
-    setTimeout(()=>{
-      cards.forEach(c=>c.classList.remove('disabled','correct','wrong'));
-      nextRound();
-    },1800);
+    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
   } else {
     card.classList.add('wrong');
     speak('TENTE DE NOVO!');
-    setTimeout(()=>{
-      card.classList.remove('wrong','disabled');
-      cards.forEach(c=>c.classList.remove('disabled'));
-    },1000);
+    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
   }
 }
 
@@ -790,18 +976,68 @@ function handleLetterClick(card, letter){
     triggerCelebration();
     const data = ALFABETO[letter];
     speak(data ? `ISSO! ${letter} DE ${data.nome}!` : `ISSO! A LETRA ${letter}!`);
-
-    setTimeout(()=>{
-      cards.forEach(c=>c.classList.remove('disabled','correct','wrong'));
-      nextRound();
-    },1800);
+    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
   } else {
     card.classList.add('wrong');
     speak('TENTE DE NOVO!');
-    setTimeout(()=>{
-      card.classList.remove('wrong','disabled');
-      cards.forEach(c=>c.classList.remove('disabled'));
-    },1000);
+    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
+  }
+}
+
+// --- NÍVEL 4: LER PALAVRA ---
+function handleWordClick(card, word){
+  if(card.classList.contains('disabled')) return;
+  const cards = document.querySelectorAll('.animal-card');
+  cards.forEach(c=>c.classList.add('disabled'));
+
+  if(word === state.gameTarget){
+    card.classList.add('correct');
+    state.gameCorrect++;
+    triggerCelebration();
+    speak(`ISSO! ${word}!`);
+    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
+  } else {
+    card.classList.add('wrong');
+    speak('TENTE DE NOVO!');
+    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
+  }
+}
+
+// --- NÍVEL 5: COMPLETAR ---
+function handleCompleteClick(card, letter, expected){
+  if(card.classList.contains('disabled')) return;
+  const cards = document.querySelectorAll('.letter-card');
+  cards.forEach(c=>c.classList.add('disabled'));
+
+  if(letter === expected){
+    card.classList.add('correct');
+    state.gameCorrect++;
+    triggerCelebration();
+    speak(`ISSO! A LETRA ${letter}!`);
+    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
+  } else {
+    card.classList.add('wrong');
+    speak('TENTE DE NOVO!');
+    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
+  }
+}
+
+// --- NÍVEL 6: QUAL E? ---
+function handlePickClick(card, word){
+  if(card.classList.contains('disabled')) return;
+  const cards = document.querySelectorAll('.letter-card');
+  cards.forEach(c=>c.classList.add('disabled'));
+
+  if(word === state.gameTarget){
+    card.classList.add('correct');
+    state.gameCorrect++;
+    triggerCelebration();
+    speak(`ISSO! ${word}!`);
+    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
+  } else {
+    card.classList.add('wrong');
+    speak('TENTE DE NOVO!');
+    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
   }
 }
 
@@ -814,22 +1050,24 @@ function finishLevel(){
   if(!state.levelsCompleted.includes(levelId)){
     state.levelsCompleted.push(levelId);
   }
-  if(levelId < 3 && state.levelUnlocked <= levelId){
+  if(levelId < 6 && state.levelUnlocked <= levelId){
     state.levelUnlocked = levelId + 1;
   }
   saveProgress();
   updateMap();
 
-  // Reward: última letra usada
-  const lastLetter = state.gameUsedLetters.length > 0
+  const lastLetter = state.gameUsedLetters && state.gameUsedLetters.length > 0
     ? state.gameUsedLetters[state.gameUsedLetters.length - 1]
-    : LEVELS.find(l=>l.id===levelId).letras[0];
+    : 'A';
   setTimeout(()=>showTreasure(lastLetter), 400);
 }
 
 document.getElementById('level1Btn').addEventListener('click', ()=>startLevel(1));
 document.getElementById('level2Btn').addEventListener('click', ()=>startLevel(2));
 document.getElementById('level3Btn').addEventListener('click', ()=>startLevel(3));
+document.getElementById('level4Btn').addEventListener('click', ()=>startLevel(4));
+document.getElementById('level5Btn').addEventListener('click', ()=>startLevel(5));
+document.getElementById('level6Btn').addEventListener('click', ()=>startLevel(6));
 
 document.getElementById('modalClose').addEventListener('click',()=>{
   document.getElementById('gameModal').classList.remove('open');
