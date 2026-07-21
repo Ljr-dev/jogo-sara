@@ -36,6 +36,9 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .learn-header{margin-bottom:12px;display:flex;align-items:center;gap:12px}
 .learn-header h1{font-size:clamp(22px,4vw,36px);color:#5a3e2b;text-shadow:2px 2px 0 rgba(255,200,100,.3)}
 .learn-header .level-badge{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#5a3e2b;padding:4px 16px;border-radius:30px;font-weight:700;font-size:clamp(12px,2vw,16px);box-shadow:0 2px 8px rgba(255,170,0,.4)}
+.sound-btn{width:clamp(36px,6vw,48px);height:clamp(36px,6vw,48px);border-radius:50%;border:3px solid rgba(0,0,0,.1);background:rgba(255,255,255,.8);cursor:pointer;font-size:clamp(18px,3vw,26px);display:flex;align-items:center;justify-content:center;transition:all .15s;margin-left:auto;flex-shrink:0}
+.sound-btn:active{transform:scale(.85)}
+.sound-btn.muted{opacity:.4;background:#eee}
 
 /* ===== MAPA ===== */
 .map-container{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0}
@@ -195,6 +198,7 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .main .learn-header{gap:8px}
 .main .learn-header h1{font-size:clamp(18px,4.5vw,24px)}
 .main .learn-header .level-badge{font-size:clamp(10px,2.5vw,13px);padding:3px 12px}
+.sound-btn{width:clamp(32px,5vw,40px);height:clamp(32px,5vw,40px);font-size:clamp(16px,3vw,20px)}
 .map-row{gap:clamp(4px,1.5vw,14px)}
 .map-circle{width:clamp(60px,16vw,100px);height:clamp(60px,16vw,100px);font-size:clamp(26px,6vw,40px)}
 .map-step-label{font-size:clamp(9px,1.5vw,13px);max-width:90px}
@@ -328,6 +332,7 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
     <div class="learn-header">
       <h1>🔤 APRENDER LETRAS</h1>
       <span class="level-badge" id="levelBadge">Nível 1</span>
+      <button class="sound-btn" id="soundToggleBtn" aria-label="Som">🔊</button>
     </div>
     <div class="map-container">
       <div class="map" id="gameMap">
@@ -649,47 +654,92 @@ function saveProgress(){
 }
 
 // ============================================================
-//  SPEECH - Voz infantil e elegante
+//  SPEECH - Voz clara e suave
 // ============================================================
 let selectedVoice = null;
+let speechMuted = false;
+let voiceReady = false;
 
 function initVoice(){
   if(!window.speechSynthesis) return;
-  // Try to find a nice Portuguese female/child voice
+  tryVoices();
+  speechSynthesis.addEventListener('voiceschanged', tryVoices);
+}
+
+function tryVoices(){
   const voices = speechSynthesis.getVoices();
-  if(voices.length === 0){
-    speechSynthesis.addEventListener('voiceschanged', ()=>{
-      selectVoice(speechSynthesis.getVoices());
-    }, {once: true});
-  } else {
-    selectVoice(voices);
-  }
+  if(voices.length === 0) return;
+  voiceReady = true;
+  selectVoice(voices);
 }
 
 function selectVoice(voices){
-  // Priority: Portuguese BR female > Portuguese female > any Portuguese > any female
-  const pref = voices.find(v => /pt[-_]BR/i.test(v.lang) && /female|Maria|Helena|Luciana|Isabella/i.test(v.name));
-  const ptBr = voices.find(v => /pt[-_]BR/i.test(v.lang));
-  const pt = voices.find(v => /^pt\b/i.test(v.lang));
-  const anyFemale = voices.find(v => /female|woman|girl/i.test(v.name));
-  selectedVoice = pref || ptBr || pt || anyFemale || voices[0];
+  // Best Portuguese BR voices (Google usually sounds best)
+  const pref1 = voices.find(v => /Google/i.test(v.name) && /pt[-_]BR/i.test(v.lang));
+  const pref2 = voices.find(v => /pt[-_]BR/i.test(v.lang) && /female|Maria/i.test(v.name));
+  const pref3 = voices.find(v => /pt[-_]BR/i.test(v.lang));
+  const pref4 = voices.find(v => /^pt\b/i.test(v.lang) && /Google/i.test(v.name));
+  const pref5 = voices.find(v => /^pt\b/i.test(v.lang));
+  // Any decent sounding voice
+  const pref6 = voices.find(v => v.default);
+  const pref7 = voices[0];
+
+  selectedVoice = pref1 || pref2 || pref3 || pref4 || pref5 || pref6 || pref7;
+  console.log('Voz selecionada:', selectedVoice ? selectedVoice.name : 'nenhuma');
+}
+
+// Sound button toggle
+const soundBtn = document.getElementById('soundToggleBtn');
+if(soundBtn) soundBtn.addEventListener('click', toggleSound);
+
+function toggleSound(){
+  speechMuted = !speechMuted;
+  const btn = document.getElementById('soundToggleBtn');
+  if(btn){
+    btn.textContent = speechMuted ? '🔇' : '🔊';
+    btn.classList.toggle('muted', speechMuted);
+  }
+  if(!speechMuted) speak('SOM LIGADO!');
 }
 
 function speak(text, cb){
-  if(!window.speechSynthesis) { if(cb)cb(); return; }
+  if(speechMuted || !window.speechSynthesis) { if(cb)cb(); return; }
   speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
+
+  // Split long text into shorter chunks for better pronunciation
+  const chunks = splitText(text);
+  speakChunk(chunks, 0, cb);
+}
+
+function splitText(text){
+  // Split by punctuation or spaces for natural phrasing
+  const parts = text.split(/(?<=[!?])|(?<=\.)/);
+  if(parts.length <= 1) return [text];
+  return parts.filter(p => p.trim().length > 0);
+}
+
+function speakChunk(chunks, index, cb){
+  if(index >= chunks.length){ if(cb)cb(); return; }
+
+  const utter = new SpeechSynthesisUtterance(chunks[index]);
   utter.lang = 'pt-BR';
-  utter.rate = 0.78;
-  utter.pitch = 1.45;
+  utter.rate = 0.65;
+  utter.pitch = 1.1;
   utter.volume = 1;
   if(selectedVoice) utter.voice = selectedVoice;
-  utter.onend = ()=>{ if(cb)cb(); };
+
+  utter.onend = ()=>{
+    // Small pause between chunks
+    if(index < chunks.length - 1){
+      setTimeout(()=> speakChunk(chunks, index+1, cb), 150);
+    } else if(cb) cb();
+  };
   utter.onerror = ()=>{ if(cb)cb(); };
+
   speechSynthesis.speak(utter);
 }
 
-// Init voices on page load
+// Init voices
 initVoice();
 
 // ============================================================
