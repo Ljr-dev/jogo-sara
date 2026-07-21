@@ -106,6 +106,15 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .tracing-mode-btn:active{transform:scale(.9)}
 .tracing-mode-btn.active{border-color:#66bb6a;background:#e8f5e9}
 
+/* ===== WORD WRITING ===== */
+.word-controls{display:flex;flex-direction:column;gap:8px;margin-top:8px;max-height:200px;overflow-y:auto}
+.word-controls-header{text-align:center}
+.word-current{font-size:clamp(14px,2.5vw,18px);font-weight:700;color:#5a3e2b}
+.word-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:4px 0}
+.word-btn{background:#fff;border:2px solid #e0d5c4;border-radius:12px;padding:6px 14px;font-size:clamp(12px,2vw,15px);font-weight:700;color:#5a3e2b;cursor:pointer;transition:all .15s;font-family:'Arial Black','Impact',sans-serif;letter-spacing:1px}
+.word-btn:active{transform:scale(.88);background:#f3e5f5;border-color:#ab47bc}
+.word-btn.active{background:#f3e5f5;border-color:#ab47bc;box-shadow:0 0 0 2px rgba(171,71,188,.3)}
+
 /* ===== WHACK-A-MOLE ===== */
 .whack-content{max-width:450px!important}
 .whack-scorebar{display:flex;justify-content:space-between;font-size:clamp(18px,4vw,28px);font-weight:700;color:#5a3e2b;padding:0 8px 12px}
@@ -335,7 +344,7 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
           </div>
           <span class="map-connector">➡️</span>
           <div class="map-step">
-            <div class="map-circle step-3" id="level3Btn" data-level="3">✏️<span class="lock-icon">🔒</span></div>
+            <div class="map-circle step-3" id="level3Btn" data-level="3">✏️</div>
             <span class="map-step-label">ESCREVER<br><small>PRATIQUE</small></span>
           </div>
         </div>
@@ -343,17 +352,17 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
         <div class="map-row-connector">⬇️</div>
         <div class="map-row">
           <div class="map-step">
-            <div class="map-circle step-3" id="level4Btn" data-level="4">📖<span class="lock-icon">🔒</span></div>
+            <div class="map-circle step-1" id="level4Btn" data-level="4">📖</div>
             <span class="map-step-label">LER<br><small>PALAVRAS</small></span>
           </div>
           <span class="map-connector">➡️</span>
           <div class="map-step">
-            <div class="map-circle step-3" id="level5Btn" data-level="5">🧩<span class="lock-icon">🔒</span></div>
+            <div class="map-circle step-1" id="level5Btn" data-level="5">🧩</div>
             <span class="map-step-label">COMPLETAR<br><small>LETRAS</small></span>
           </div>
           <span class="map-connector">➡️</span>
           <div class="map-step">
-            <div class="map-circle step-3" id="level6Btn" data-level="6">❓<span class="lock-icon">🔒</span></div>
+            <div class="map-circle step-1" id="level6Btn" data-level="6">❓</div>
             <span class="map-step-label">QUAL E?<br><small>ADIVINHE</small></span>
           </div>
         </div>
@@ -361,12 +370,12 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
         <div class="map-row-connector">⬇️</div>
         <div class="map-row">
           <div class="map-step">
-            <div class="map-circle step-3" id="level7Btn" data-level="7">👶<span class="lock-icon">🔒</span></div>
+            <div class="map-circle step-1" id="level7Btn" data-level="7">👶</div>
             <span class="map-step-label">MAMAE<br><small>CUIDA DO BEBE</small></span>
           </div>
           <span class="map-connector">➡️</span>
           <div class="map-step">
-            <div class="map-circle step-3" id="level8Btn" data-level="8">🐰<span class="lock-icon">🔒</span></div>
+            <div class="map-circle step-1" id="level8Btn" data-level="8">🐰</div>
             <span class="map-step-label">COELHO<br><small>BATE MARTELO</small></span>
           </div>
         </div>
@@ -392,6 +401,7 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
         <button class="color-btn" data-color="#ff6f00" style="background:#ff6f00" aria-label="Laranja"></button>
         <button class="clear-btn">🧹 LIMPAR</button>
         <button class="play-sound-btn" id="tracingToggleBtn">🔤 TREINAR LETRAS</button>
+        <button class="play-sound-btn" id="wordToggleBtn" style="background:#ab47bc">📝 PALAVRAS</button>
       </div>
       <div class="tracing-controls" id="tracingControls" style="display:none">
         <button class="tracing-letter-btn" data-letter="A">A</button>
@@ -410,6 +420,12 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
         <button class="tracing-letter-btn" data-letter="T">T</button>
         <button class="tracing-letter-btn" data-letter="U">U</button>
         <button class="tracing-letter-btn" data-letter="V">V</button>
+      </div>
+      <div class="word-controls" id="wordControls" style="display:none">
+        <div class="word-controls-header">
+          <span class="word-current" id="wordCurrent">👉 ESCOLHA UMA PALAVRA</span>
+        </div>
+        <div class="word-grid" id="wordGrid"></div>
       </div>
     </div>
   </section>
@@ -586,8 +602,8 @@ const LEVELS = [
   { id: 4, nome:'LER',       icon:'📖', rounds:3, type:'word-read' },
   { id: 5, nome:'COMPLETAR', icon:'🧩', rounds:3, type:'word-complete' },
   { id: 6, nome:'QUAL E?',   icon:'❓', rounds:3, type:'word-pick' },
-  { id: 7, nome:'MAMAE',     icon:'👶', rounds:3, type:'baby' },
-  { id: 8, nome:'COELHO',    icon:'🐰', rounds:10, type:'whack' },
+  { id: 7, nome:'MAMAE',     icon:'👶', rounds:999, type:'baby' },
+  { id: 8, nome:'COELHO',    icon:'🐰', rounds:999, type:'whack' },
 ];
 
 // ============================================================
@@ -596,7 +612,7 @@ const LEVELS = [
 let state = {
   currentPage: 'learn',
   levelsCompleted: [],   // ids dos níveis completados
-  levelUnlocked: 1,      // nível atual desbloqueado
+  levelUnlocked: 8,      // todos os níveis desbloqueados
   currentLevel: 1,       // nível sendo jogado
   stickers: [],          // letras colecionadas
   gameActive: false,
@@ -619,7 +635,7 @@ function loadProgress(){
     const d = JSON.parse(localStorage.getItem('sara_jogo_letras'));
     if(d){
       state.levelsCompleted = Array.isArray(d.levelsCompleted) ? d.levelsCompleted : [];
-      state.levelUnlocked = d.levelUnlocked || 1;
+      state.levelUnlocked = 8;
       state.stickers = Array.isArray(d.stickers) ? d.stickers : [];
     }
   }catch(e){}
@@ -769,23 +785,19 @@ document.querySelectorAll('.sidebar-btn').forEach(btn=>{
 // ============================================================
 function updateMap(){
   const badge = document.getElementById('levelBadge');
-  badge.textContent = `NÍVEL ${state.levelUnlocked}`;
+  badge.textContent = '🌟 TODOS OS NÍVEIS';
 
   [1,2,3,4,5,6,7,8].forEach(lvl=>{
     const btn = document.getElementById('level'+lvl+'Btn');
     if(!btn) return;
-    const isUnlocked = lvl <= state.levelUnlocked;
     const isCompleted = state.levelsCompleted.includes(lvl);
 
     btn.className = 'map-circle';
     if(isCompleted) btn.classList.add('step-2');
-    else if(isUnlocked) btn.classList.add('step-1');
-    else btn.classList.add('step-3');
+    else btn.classList.add('step-1');
 
     let lock = btn.querySelector('.lock-icon');
-    if(!isUnlocked){
-      if(!lock){ lock = document.createElement('span'); lock.className = 'lock-icon'; lock.textContent = '🔒'; btn.appendChild(lock); }
-    } else if(lock) lock.remove();
+    if(lock) lock.remove();
 
     let comp = btn.querySelector('.completed-badge');
     if(isCompleted){
@@ -816,7 +828,7 @@ function getRandomLetter(levelId, exclude){
 //  LEVEL GAME - nextRound
 // ============================================================
 function startLevel(levelId){
-  if(levelId > state.levelUnlocked || state.gameActive) return;
+  if(state.gameActive) return;
   const level = LEVELS.find(l=>l.id===levelId);
   if(!level) return;
 
@@ -1037,12 +1049,14 @@ function handleBabyClick(card, item){
   const cards = document.querySelectorAll('.animal-card');
   cards.forEach(c=>c.classList.add('disabled'));
   if(item === state.gameTarget){
-    card.classList.add('correct'); state.gameCorrect++; triggerCelebration();
-    speak('ISSO! MAMAE CUIDOU DO BEBE!');
-    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
+    card.classList.add('correct'); state.gameCorrect++;
+    triggerCelebration();
+    const msgs = ['ISSO! MAMAE CUIDOU DO BEBE!','QUE BOM! BEBE FELIZ!','MAMAE AMA O BEBE!','BEBE AGRADECE!'];
+    speak(msgs[Math.floor(Math.random()*msgs.length)]);
+    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1500);
   } else {
     card.classList.add('wrong'); speak('TENTE DE NOVO!');
-    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
+    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },900);
   }
 }
 
@@ -1061,7 +1075,12 @@ function startWhackGame(){
   whackScore = 0;
   whackTimer = 30;
   state.gameCorrect = 0;
-  state.gameRoundsNeeded = 10;
+  state.gameRoundsNeeded = 999;
+
+  document.getElementById('whackScore').textContent = '🔨 0';
+  document.getElementById('whackTimer').textContent = '⏱️ 30';
+  document.getElementById('whackTitle').textContent = '🐰 BATE MARTELO!';
+  document.getElementById('whackRestart').style.display = 'none';
 
   document.getElementById('whackScore').textContent = '🔨 0';
   document.getElementById('whackTimer').textContent = '⏱️ 30';
@@ -1140,12 +1159,7 @@ function showMole(){
 
     // Celebration particles
     createWhackParticles(e);
-
-    if(whackScore >= 10){
-      endWhackGame(true);
-    } else {
-      scheduleMole();
-    }
+    scheduleMole();
   };
 }
 
@@ -1165,7 +1179,7 @@ function createWhackParticles(e){
   setTimeout(()=>{ overlay.classList.remove('active'); overlay.innerHTML=''; }, 1000);
 }
 
-function endWhackGame(won){
+function endWhackGame(){
   clearInterval(whackInterval);
   clearTimeout(whackTimeout);
 
@@ -1178,23 +1192,13 @@ function endWhackGame(won){
 
   document.querySelector('.whack-grid').classList.remove('whack-hammer');
 
-  if(won){
-    document.getElementById('whackTitle').textContent = '🎉 PARABENS! 10 PONTOS!';
-    document.getElementById('whackRestart').style.display = 'inline-block';
+  if(whackScore >= 5){
+    document.getElementById('whackTitle').textContent = '⏱️ ACABOU! VC FEZ '+whackScore+' PONTOS! 🎉';
     triggerCelebration();
-
-    // Complete the level
-    state.gameActive = false;
-    const levelId = 8;
-    if(!state.levelsCompleted.includes(levelId)) state.levelsCompleted.push(levelId);
-    if(state.levelUnlocked <= levelId && levelId < 8) state.levelUnlocked = levelId + 1;
-    saveProgress();
-    updateMap();
-    setTimeout(()=>showTreasure('🐰'), 600);
   } else {
-    document.getElementById('whackTitle').textContent = '⏱️ ACABOU O TEMPO! TENTE DE NOVO!';
-    document.getElementById('whackRestart').style.display = 'inline-block';
+    document.getElementById('whackTitle').textContent = '⏱️ ACABOU! VC FEZ '+whackScore+' PONTOS! TENTE DE NOVO!';
   }
+  document.getElementById('whackRestart').style.display = 'inline-block';
 }
 
 document.getElementById('whackRestart').addEventListener('click', ()=>{
@@ -1289,6 +1293,9 @@ function initCanvas(){
   // Tracing toggle
   document.getElementById('tracingToggleBtn').addEventListener('click', toggleTracing);
 
+  // Word tracing
+  initWordTracing();
+
   // Tracing letter buttons
   document.querySelectorAll('.tracing-letter-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1309,6 +1316,7 @@ function resizeCanvas(){
   ctx.lineJoin = 'round';
   ctx.lineWidth = brushSize;
   if(state.tracingLetter) drawTracingGuide(state.tracingLetter);
+  if(wordTracingWord) drawWordGuide(wordTracingWord);
 }
 
 function startDraw(e){
@@ -1404,6 +1412,98 @@ function drawTracingGuide(letter){
   ctx.restore();
 }
 
+// ============================================================
+//  WORD TRACING - Playground
+// ============================================================
+let wordTracingActive = false;
+let wordTracingWord = null;
+
+function initWordTracing(){
+  document.getElementById('wordToggleBtn').addEventListener('click', toggleWordMode);
+  renderWordGrid();
+}
+
+function renderWordGrid(){
+  const grid = document.getElementById('wordGrid');
+  grid.innerHTML = '';
+  WORDS.forEach(w=>{
+    const btn = document.createElement('button');
+    btn.className = 'word-btn';
+    btn.textContent = w.w + ' ' + w.e;
+    btn.dataset.word = w.w;
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.word-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      wordTracingWord = w.w;
+      document.getElementById('wordCurrent').textContent = `✏️ ESCREVA: ${w.w}`;
+      drawWordGuide(w.w);
+      speak(`ESCREVA A PALAVRA ${w.w}`);
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function toggleWordMode(){
+  const controls = document.getElementById('wordControls');
+  wordTracingActive = !wordTracingActive;
+  controls.style.display = wordTracingActive ? 'flex' : 'none';
+  document.getElementById('wordToggleBtn').textContent = wordTracingActive ? '✏️ DESENHO LIVRE' : '📝 PALAVRAS';
+
+  // Close tracing if open
+  if(wordTracingActive){
+    const tc = document.getElementById('tracingControls');
+    if(tc.style.display === 'flex'){ tc.style.display = 'none'; tracingActive = false; document.getElementById('tracingToggleBtn').textContent = '🔤 TREINAR LETRAS'; }
+  }
+
+  if(!wordTracingActive){
+    wordTracingWord = null;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  } else {
+    renderWordGrid();
+    if(WORDS.length > 0){
+      const first = document.querySelector('.word-btn');
+      if(first){ first.classList.add('active'); wordTracingWord = first.dataset.word; document.getElementById('wordCurrent').textContent = `✏️ ESCREVA: ${first.dataset.word}`; drawWordGuide(first.dataset.word); }
+    }
+  }
+}
+
+function drawWordGuide(word){
+  if(!canvas || !ctx) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const fontSize = Math.min(w / word.length * 1.3, h * 0.5);
+  const size = Math.min(fontSize, 80);
+
+  // Draw dashed guide word
+  ctx.save();
+  ctx.font = `bold ${size}px "Arial Black", "Impact", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.strokeStyle = 'rgba(200,200,200,0.6)';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([8, 8]);
+  ctx.strokeText(word, w/2, h/2);
+
+  ctx.strokeStyle = 'rgba(180,180,180,0.4)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 6]);
+  ctx.strokeText(word, w/2, h/2);
+
+  ctx.restore();
+
+  // Hint
+  ctx.save();
+  ctx.font = '16px "Segoe UI", sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(`✏️ CONTORNE A PALAVRA ${word} COM O DEDO`, w/2, h - 10);
+  ctx.restore();
+}
+
 // Color buttons
 document.querySelectorAll('.color-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
@@ -1419,6 +1519,8 @@ document.querySelector('.clear-btn').addEventListener('click',()=>{
   if(!canvas) return;
   if(state.tracingLetter){
     drawTracingGuide(state.tracingLetter);
+  } else if(wordTracingWord){
+    drawWordGuide(wordTracingWord);
   } else {
     ctx.clearRect(0,0,canvas.width,canvas.height);
   }
