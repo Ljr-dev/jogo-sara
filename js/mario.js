@@ -1,640 +1,460 @@
-// ===== SUPER MARIO WORLD - Mobile Edition =====
-let mc, mctx, mRun = false, mAnim = null;
-let mWorld = 1, mLevel = 1, mScore = 0, mCoins = 0, mLives = 3;
-let mPlayer = {}, mCamera = 0, mObjs = [], mParticles = [];
-let mKeys = {left:false, right:false, up:false, down:false, jump:false, attack:false};
-let mLevelW = 0, mLevelH = 0, mGravity = 0.55, mOver = false;
-let mLevelData = null, mBlocks = [], mEnemies = [], mItems = [];
-let mStarTimer = 0, mPower = 0; // 0=small, 1=big, 2=fire
+// ===== SUPER MARIO WORLD - v2 Funcional =====
+let c, ctx, run = false, anim = null;
+let world = 1, score = 0, coins = 0, lives = 3;
+let player = {}, camera = 0, particles = [];
+let keys = {left:false, right:false, jump:false, down:false, attack:false};
+let level = [], blocks = [], enemies = [], items = [];
+let power = 0, starTimer = 0, levelW = 6400; // 200 tiles
 
-// ===== WORLDS (7 mundos estilo SMW) =====
+const T = 32; // tile size
+const GRAVITY = 0.55;
+const GROUND_Y_ROW = 13; // ground starts at row 13 (0-indexed)
+
 const WORLDS = [
-  {name:'YOSHI ISLAND',  bg:'#5c94fc', ground:'#5ab45a', brick:'#c47a3a', desc:'GRAMA'},
-  {name:'DONUT PLAINS',  bg:'#f4c87a', ground:'#c49a5a', brick:'#a08040', desc:'DESERTO'},
-  {name:'VANILLA DOME',  bg:'#2a2a3a', ground:'#5a4a3a', brick:'#7a6a5a', desc:'CAVERNA'},
-  {name:'BUTTER BRIDGE', bg:'#c8e8ff', ground:'#8ac8e8', brick:'#68a8c8', desc:'GELO'},
-  {name:'FOREST ILLUSION',bg:'#2a5a2a',ground:'#3a6a3a', brick:'#4a7a4a', desc:'FLORESTA'},
-  {name:'CHOCOLATE ISL', bg:'#d4a060', ground:'#a08040', brick:'#806030', desc:'MONTANHA'},
-  {name:'BOWSER VALLEY', bg:'#3a1a1a', ground:'#5a2a2a', brick:'#7a3a3a', desc:'CASTELO'},
+  {name:'YOSHI ISLAND',bg:'#5c94fc',grass:'#5ab45a',brick:'#c47a3a'},
+  {name:'DONUT PLAINS',bg:'#f4c87a',grass:'#c49a5a',brick:'#a08040'},
+  {name:'VANILLA DOME',bg:'#2a2a3a',grass:'#5a4a3a',brick:'#7a6a5a'},
+  {name:'BUTTER BRIDGE',bg:'#c8e8ff',grass:'#8ac8e8',brick:'#68a8c8'},
+  {name:'FOREST ILLUSION',bg:'#2a5a2a',grass:'#3a6a3a',brick:'#4a7a4a'},
+  {name:'CHOCOLATE ISL',bg:'#d4a060',grass:'#a08040',brick:'#806030'},
+  {name:'BOWSER VALLEY',bg:'#3a1a1a',grass:'#5a2a2a',brick:'#7a3a3a'},
 ];
 
-// ===== LEVEL GENERATORS =====
-function genLevel(world, level){
-  const wdata = [];
-  const W = 200, H = 15;
-  mLevelW = W * 32;
-  mLevelH = H * 32;
-  
-  // Fill with air
-  for(let y=0;y<H;y++){ wdata[y]=[]; for(let x=0;x<W;x++) wdata[y][x]=0; }
-  
-  // Ground
-  for(let x=0;x<W;x++){ wdata[H-1][x]=1; wdata[H-2][x]=1; }
-  
-  // Generate based on world theme
-  const seed = world * 100 + level;
-  const rng = (max)=>Math.floor(Math.random() * max);
-  
+function genLevel(){
+  level = [];
+  for(let y=0;y<15;y++){ level[y]=[]; for(let x=0;x<200;x++) level[y][x]=0; }
+  // Ground rows 13 and 14
+  for(let x=0;x<200;x++){ level[13][x]=1; level[14][x]=1; }
   // Pipes
-  for(let i=0;i<3+level;i++){
-    const px = 15 + i * rng(20) + level*5;
-    const ph = 2 + rng(3);
-    for(let y=0;y<ph;y++) wdata[H-3-y][px] = 2;
-    wdata[H-3-ph][px] = 3; // pipe top
+  for(let i=0;i<4;i++){
+    let px=20+i*40+Math.floor(Math.random()*15);
+    if(px>190) continue;
+    let ph=2+Math.floor(Math.random()*3);
+    for(let y=0;y<ph;y++) if(13-y>=0) level[13-y][px]=2;
+    if(13-ph>=0) level[13-ph][px]=3;
   }
-  
-  // ? Blocks
-  for(let i=0;i<4+level*2;i++){
-    const bx = 10 + i * rng(15);
-    wdata[H-5][bx] = 4;
+  // ? blocks at row 10
+  for(let i=0;i<6;i++){
+    let bx=15+i*30+Math.floor(Math.random()*10);
+    if(bx<200) level[10][bx]=4;
   }
-  
-  // Brick blocks (platforms)
-  for(let p=0;p<3+level;p++){
-    const px = 20 + p * rng(20);
-    const pw = 3 + rng(4);
-    const py = H - 5 - rng(3);
-    for(let i=0;i<pw;i++) if(px+i < W) wdata[py][px+i] = 5;
+  // Brick platforms at rows 8-10
+  for(let p=0;p<4;p++){
+    let px=25+p*45+Math.floor(Math.random()*10);
+    let py=9-Math.floor(Math.random()*2);
+    let pw=3+Math.floor(Math.random()*3);
+    for(let i=0;i<pw;i++) if(px+i<200) level[py][px+i]=5;
   }
-  
-  // Coins in air
-  for(let i=0;i<6+level*3;i++){
-    const cx = 8 + rng(W-16);
-    const cy = H - 6 - rng(5);
-    wdata[cy][cx] = 6;
+  // Coins in air (row 7-11)
+  for(let i=0;i<15;i++){
+    let cx=10+Math.floor(Math.random()*180);
+    let cy=7+Math.floor(Math.random()*5);
+    if(level[cy][cx]===0) level[cy][cx]=6;
   }
-  
   // Gaps (pits)
-  const gapCount = Math.min(level, 4);
-  for(let g=0;g<gapCount;g++){
-    const gx = 40 + g * rng(30);
-    const gw = 2 + rng(2);
-    if(gx+gw < W-5){
-      for(let x=0;x<gw;x++){ wdata[H-1][gx+x]=0; wdata[H-2][gx+x]=0; }
-    }
-  }
-  
-  return wdata;
+  [50,100,150].forEach(gx=>{
+    if(gx<195){ level[13][gx]=0; level[13][gx+1]=0; level[14][gx]=0; level[14][gx+1]=0; }
+  });
 }
 
-// ===== START GAME =====
-function startMario(world){
-  mWorld = world || 1;
-  mLevel = 1;
-  mScore = 0; mCoins = 0; mLives = 3;
-  mPower = 0; mStarTimer = 0;
+function startMario(w){
+  world = w||1; score=0; coins=0; lives=3; power=0; starTimer=0;
   loadLevel();
 }
 
 function loadLevel(){
   const area = document.getElementById('marioCanvas').parentElement;
-  mc = document.getElementById('marioCanvas');
-  mc.width = area.clientWidth;
-  mc.height = area.clientHeight;
-  mctx = mc.getContext('2d');
+  c = document.getElementById('marioCanvas');
+  c.width = area.clientWidth;
+  c.height = area.clientHeight;
+  ctx = c.getContext('2d');
   
-  mLevelData = genLevel(mWorld, mLevel);
-  mCamera = 0;
-  mOver = false;
-  mObjs = []; mParticles = []; mBlocks = []; mEnemies = []; mItems = [];
+  genLevel();
+  camera = 0;
+  blocks=[]; enemies=[]; items=[]; particles=[];
   
-  // Player
-  mPlayer = {x:64, y:mc.height-100, w:24, h:32, vx:0, vy:0, onGround:false, jumping:false, facing:1, runFrame:0, invincible:0, ducking:false};
+  // Player in world coords: x=pixels, y=pixels
+  player = {x:80, y:GROUND_Y_ROW*T-40, w:24, h:30, vx:0, vy:0, onGround:false, jumping:false, facing:1, inv:0, ducking:false, attacking:false, atkTimer:0};
   
-  // Build object arrays from level data
-  const H = mLevelData.length;
-  const W = mLevelData[0].length;
-  const tileH = 32;
-  
-  for(let y=0;y<H;y++){
-    for(let x=0;x<W;x++){
-      const t = mLevelData[y][x];
-      if(t===0) continue;
-      const tx = x * 32, ty = y * 32 - (mc.height - H*32) + (H*32 - mc.height);
-      // Adjust Y to canvas
-      const cy = y * 32;
-      
-      if(t===1) mBlocks.push({x:tx, y:cy, w:32, h:32, type:'ground', hit:false});
-      else if(t===2) mBlocks.push({x:tx, y:cy, w:32, h:32, type:'pipe', hit:false});
-      else if(t===3) mBlocks.push({x:tx, y:cy-16, w:32, h:48, type:'pipe-top', hit:false});
-      else if(t===4) mBlocks.push({x:tx, y:cy, w:32, h:32, type:'question', hit:false});
-      else if(t===5) mBlocks.push({x:tx, y:cy, w:32, h:32, type:'brick', hit:false});
-      else if(t===6) mItems.push({x:tx+8, y:cy+8, w:16, h:16, type:'coin', got:false, bob:Math.random()*Math.PI*2});
-    }
+  // Build block list from level
+  for(let y=0;y<15;y++) for(let x=0;x<200;x++){
+    let t=level[y][x];
+    if(t===0) continue;
+    let bx=x*T, by=y*T;
+    if(t===1) blocks.push({x:bx,y:by,w:T,h:T,type:'ground'});
+    if(t===2) blocks.push({x:bx-3,y:by+8,w:38,h:24,type:'pipe'});
+    if(t===3) blocks.push({x:bx-6,y:by-4,w:44,h:40,type:'pipe_top'});
+    if(t===4) blocks.push({x:bx,y:by,w:T,h:T,type:'question',hit:false,bump:0,bumpT:0});
+    if(t===5) blocks.push({x:bx,y:by,w:T,h:T,type:'brick',hit:false});
+    if(t===6) items.push({x:bx+4,y:by+4,w:24,h:24,type:'coin',got:false,bob:Math.random()*6});
   }
   
-  // Spawn enemies
-  for(let i=0;i<5+mLevel*2;i++){
-    const ex = 200 + Math.random() * (mLevelW - 400);
-    mEnemies.push({x:ex, y:0, w:28, h:28, vx:-1 - Math.random(), type:'goomba', alive:true, squished:0});
+  // Enemies
+  for(let i=0;i<6;i++){
+    let ex=300+Math.random()*(levelW-500);
+    enemies.push({x:ex,y:GROUND_Y_ROW*T-32,w:28,h:28,vx:-(0.8+Math.random()*0.5),alive:true,squish:0});
   }
   
   document.getElementById('marioOverlay').classList.add('hidden');
-  document.getElementById('marioScore').textContent = mScore;
-  document.getElementById('marioLives').textContent = '❤️ '+mLives;
-  document.getElementById('marioCoins').textContent = '🪙 '+mCoins;
-  document.getElementById('marioWorld').textContent = 'MUNDO '+mWorld+'-'+mLevel;
+  document.getElementById('marioScore').textContent=score;
+  document.getElementById('marioLives').textContent='❤️ '+lives;
+  document.getElementById('marioCoins').textContent='🪙 '+coins;
+  document.getElementById('marioWorld').textContent='MUNDO '+world+'-1';
   
-  if(mAnim) cancelAnimationFrame(mAnim);
-  mRun = true;
-  mAnim = requestAnimationFrame(marioLoop);
+  if(anim) cancelAnimationFrame(anim);
+  run=true;
+  anim=requestAnimationFrame(gameLoop);
 }
 
-// ===== CONTROLS =====
-document.getElementById('btnLeft').addEventListener('touchstart', e=>{e.preventDefault(); mKeys.left=true;});
-document.getElementById('btnLeft').addEventListener('touchend', e=>{e.preventDefault(); mKeys.left=false;});
-document.getElementById('btnRight').addEventListener('touchstart', e=>{e.preventDefault(); mKeys.right=true;});
-document.getElementById('btnRight').addEventListener('touchend', e=>{e.preventDefault(); mKeys.right=false;});
-document.getElementById('btnJump').addEventListener('touchstart', e=>{e.preventDefault(); mKeys.jump=true; mKeys.up=true;});
-document.getElementById('btnJump').addEventListener('touchend', e=>{e.preventDefault(); mKeys.jump=false; mKeys.up=false;});
-document.getElementById('btnAttack').addEventListener('touchstart', e=>{e.preventDefault(); mKeys.attack=true;});
-document.getElementById('btnAttack').addEventListener('touchend', e=>{e.preventDefault(); mKeys.attack=false;});
-document.getElementById('btnDown').addEventListener('touchstart', e=>{e.preventDefault(); mKeys.down=true;});
-document.getElementById('btnDown').addEventListener('touchend', e=>{e.preventDefault(); mKeys.down=false;});
-document.getElementById('btnUp').addEventListener('touchstart', e=>{e.preventDefault(); mKeys.jump=true;});
-document.getElementById('btnUp').addEventListener('touchend', e=>{e.preventDefault(); mKeys.jump=false;});
+function gameLoop(){
+  if(!run) return;
+  update();
+  draw();
+  anim=requestAnimationFrame(gameLoop);
+}
 
-// Keyboard
-document.onkeydown = e=>{
-  if(e.key==='ArrowLeft') mKeys.left=true;
-  if(e.key==='ArrowRight') mKeys.right=true;
-  if(e.key==='ArrowUp') mKeys.jump=true;
-  if(e.key==='ArrowDown') mKeys.down=true;
-  if(e.key===' '||e.key==='x') mKeys.attack=true;
-};
-document.onkeyup = e=>{
-  if(e.key==='ArrowLeft') mKeys.left=false;
-  if(e.key==='ArrowRight') mKeys.right=false;
-  if(e.key==='ArrowUp') mKeys.jump=false;
-  if(e.key==='ArrowDown') mKeys.down=false;
-  if(e.key===' '||e.key==='x') mKeys.attack=false;
-};
-
-// ===== GAME LOOP =====
-function marioLoop(){
-  if(!mRun) return;
-  const w = mc.width, h = mc.height;
-  const W = mLevelData[0].length, tileH = 32;
-  const levelH = W * tileH;
+function update(){
+  let p=player, w=c.width, h=c.height;
+  let wo=WORLDS[world-1];
   
-  // === UPDATE ===
-  const p = mPlayer;
-  const world = WORLDS[mWorld-1];
+  // Movement
+  let mx=0;
+  if(keys.left){ mx=-3.5; p.facing=-1; }
+  if(keys.right){ mx=3.5; p.facing=1; }
+  if(keys.attack && power>=2) mx*=1.3;
+  p.vx=mx;
   
-  // Horizontal movement
-  let moveX = 0;
-  if(mKeys.left){ moveX = -4; p.facing = -1; }
-  if(mKeys.right){ moveX = 4; p.facing = 1; }
-  if(mKeys.attack && mPower>=2){ /* fire run */ moveX *= 1.3; }
-  
-  p.vx = moveX;
-  p.ducking = mKeys.down && p.onGround && !p.jumping;
+  p.ducking=keys.down&&p.onGround;
   
   // Jump
-  if(mKeys.jump && p.onGround && !p.jumping){
-    p.vy = -11;
-    p.onGround = false;
-    p.jumping = true;
+  if(keys.jump && p.onGround && !p.jumping){
+    p.vy=-10.5; p.onGround=false; p.jumping=true;
   }
-  if(!mKeys.jump && p.jumping && p.vy < -3){
-    p.vy *= 0.85; // Variable jump height
-  }
+  if(!keys.jump && p.jumping && p.vy<-3) p.vy*=0.85; // variable height
   
   // Gravity
-  p.vy += mGravity;
-  if(p.vy > 12) p.vy = 12;
+  p.vy+=GRAVITY;
+  if(p.vy>12) p.vy=12;
   
   // Attack
-  if(mKeys.attack && !p.attacking){
-    p.attacking = true;
-    p.attackTimer = 10;
-    // Fire if big
-    if(mPower>=2){
-      mItems.push({x:p.x+(p.facing>0?p.w:0), y:p.y+p.h/2, w:8, h:8, type:'fireball', vx:p.facing*8, vy:-2, got:false, life:60});
+  if(keys.attack && !p.attacking){
+    p.attacking=true; p.atkTimer=10;
+    if(power>=2){
+      items.push({x:p.x+(p.facing>0?p.w:0),y:p.y+p.h/2,w:10,h:10,type:'fire',vx:p.facing*7,vy:-1.5,life:50});
+    } else {
+      // Melee hit
+      for(let e of enemies){
+        if(!e.alive) continue;
+        let fx=p.x+(p.facing>0?p.w:-20);
+        if(Math.abs(e.x-fx)<30 && Math.abs(e.y-p.y)<30){ e.alive=false; score+=30; spawnParticles(e.x,e.y,6,'stomp'); }
+      }
     }
   }
-  if(p.attacking){
-    p.attackTimer--;
-    if(p.attackTimer<=0) p.attacking = false;
-  }
+  if(p.attacking){ p.atkTimer--; if(p.atkTimer<=0) p.attacking=false; }
   
   // Apply velocity
-  p.x += p.vx;
-  p.y += p.vy;
+  p.x+=p.vx;
+  p.y+=p.vy;
   
-  // Run animation
-  if(Math.abs(p.vx) > 0.5 && p.onGround) p.runFrame += 0.2;
+  // Invincibility
+  if(p.inv>0) p.inv--;
+  if(starTimer>0) starTimer--;
   
-  // Invincibility timer
-  if(p.invincible > 0) p.invincible--;
-  if(mStarTimer > 0) mStarTimer--;
+  // === COLLISION ===
+  p.onGround=false;
+  let pH=p.ducking&&p.onGround?20:p.h;
   
-  // === COLLISION WITH BLOCKS ===
-  p.onGround = false;
-  const pH = p.ducking && p.onGround ? 20 : p.h;
-  
-  for(let b of mBlocks){
-    if(b.type === 'ground' || b.type === 'pipe' || b.type === 'pipe-top' || b.type === 'brick' || b.type === 'question'){
-      if(collides(p.x, p.y, p.w, pH, b.x, b.y, b.w, b.h)){
-        // From top (landing)
-        if(p.vy > 0 && p.y + pH > b.y && p.y + pH < b.y + b.h + 8){
-          p.y = b.y - pH;
-          p.vy = 0;
-          p.onGround = true;
-          p.jumping = false;
-        }
-        // From bottom (head bump)
-        else if(p.vy < 0 && p.y < b.y + b.h && p.y > b.y){
-          p.vy = 0;
-          p.y = b.y + b.h;
-          // Hit ? block
-          if(b.type === 'question' && !b.hit){
-            b.hit = true;
-            // Spawn coin
-            mCoins++;
-            mScore += 10;
-            for(let i=0;i<5;i++) mParticles.push({x:b.x+16, y:b.y, vx:(Math.random()-0.5)*6, vy:-Math.random()*6-4, life:15, type:'coin'});
-            // Bump animation
-            b.bumpY = -6; b.bumpTimer = 6;
-          }
-          // Hit brick
-          if(b.type === 'brick' && !b.hit && mPower > 0){
-            b.hit = true;
-            for(let i=0;i<8;i++) mParticles.push({x:b.x+16, y:b.y+16, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8-4, life:20, type:'break'});
-          }
-        }
-        // Side collision
-        else {
-          if(p.vx > 0) p.x = b.x - p.w;
-          else if(p.vx < 0) p.x = b.x + b.w;
-          p.vx = 0;
-        }
+  for(let b of blocks){
+    if(!b.x) continue; // skip if removed
+    if(!rectCollide(p.x,p.y,p.w,pH,b.x,b.y,b.w,b.h)) continue;
+    
+    // From top (landing)
+    if(p.vy>0 && p.y+pH>b.y && p.y+pH<b.y+b.h+6){
+      p.y=b.y-pH; p.vy=0; p.onGround=true; p.jumping=false;
+    }
+    // From bottom (head bump)
+    else if(p.vy<0 && p.y<b.y+b.h && p.y>b.y){
+      p.vy=0; p.y=b.y+b.h;
+      if(b.type==='question'&&!b.hit){
+        b.hit=true; b.bump=-6; b.bumpT=6;
+        coins++; score+=10; spawnParticles(b.x+16,b.y,5,'coin');
       }
+      if(b.type==='brick'&&!b.hit&&power>0){
+        b.hit=true; spawnParticles(b.x+16,b.y+16,8,'break');
+        b.x=undefined; // remove
+      }
+    }
+    // Side
+    else {
+      if(p.vx>0) p.x=b.x-p.w;
+      else if(p.vx<0) p.x=b.x+b.w;
+      p.vx=0;
     }
   }
   
-  // Bump animation
-  for(let b of mBlocks){
-    if(b.bumpTimer){ b.bumpTimer--; b.bumpY += b.bumpTimer > 3 ? -2 : 2; if(b.bumpTimer<=0) b.bumpY=0; }
-  }
+  // Bump animations
+  blocks.forEach(b=>{
+    if(b.bumpT){ b.bumpT--; b.bump+=b.bumpT>3?-2:2; if(b.bumpT<=0)b.bump=0; }
+  });
   
-  // Camera follow
-  const targetCam = p.x - w * 0.25;
-  mCamera += (targetCam - mCamera) * 0.1;
-  if(mCamera < 0) mCamera = 0;
-  if(mCamera > mLevelW - w) mCamera = mLevelW - w;
+  // Remove hit blocks
+  blocks=blocks.filter(b=>b.x!==undefined);
   
-  // Fall off screen
-  if(p.y > h + 50){
-    playerDie();
-    return;
-  }
+  // Camera
+  let target=p.x-w*0.3;
+  camera+=(target-camera)*0.1;
+  if(camera<0)camera=0;
+  if(camera>levelW-w)camera=levelW-w;
+  
+  // Fall off
+  if(p.y>h+60){ playerDie(); return; }
   
   // === ENEMIES ===
-  for(let e of mEnemies){
+  for(let e of enemies){
     if(!e.alive) continue;
-    e.x += e.vx;
-    e.y = mLevelData.length * 32 - 64 - e.h;
+    e.x+=e.vx;
+    e.y=GROUND_Y_ROW*T-32;
+    if(e.squish>0){ e.squish--; if(e.squish===1)e.alive=false; continue; }
     
-    // Squished timer
-    if(e.squished > 0) e.squished--;
-    if(e.squished > 0 && e.squished < 30) continue;
-    if(e.squished === 1) e.alive = false;
+    let sx=e.x-camera;
+    if(sx<-80||sx>w+80) continue;
     
-    // Off screen cleanup
-    if(e.x < mCamera - 100 || e.x > mCamera + w + 100) continue;
-    
-    // Collision with player
-    if(collides(p.x, p.y, p.w, pH, e.x, e.y, e.w, e.h)){
-      if(p.vy > 0 && p.y + pH < e.y + 15){
-        // Stomp!
-        e.squished = 30;
-        p.vy = -8;
-        mScore += 20;
-        for(let i=0;i<4;i++) mParticles.push({x:e.x+14, y:e.y, vx:(Math.random()-0.5)*5, vy:-Math.random()*3-2, life:12, type:'stomp'});
-      } else if(p.invincible <= 0){
-        // Hit by enemy
-        playerHit();
-      }
+    if(rectCollide(p.x,p.y,p.w,pH,e.x,e.y,e.w,e.h)){
+      if(p.vy>0 && p.y+pH<e.y+12){
+        e.squish=25; p.vy=-8; score+=20;
+        spawnParticles(e.x+14,e.y,4,'stomp');
+      } else if(p.inv<=0){ playerHit(); }
     }
   }
   
   // === ITEMS ===
-  for(let item of mItems){
-    if(item.got && item.type !== 'fireball') continue;
-    
-    // Coins float
-    if(item.type === 'coin'){
-      item.bob += 0.05;
-      // Collection
-      if(collides(p.x, p.y, p.w, pH, item.x-4, item.y-4+Math.sin(item.bob)*3, 24, 24) && !item.got){
-        item.got = true;
-        mCoins++;
-        mScore += 5;
-        for(let i=0;i<4;i++) mParticles.push({x:item.x+8, y:item.y+8, vx:(Math.random()-0.5)*4, vy:-Math.random()*4-2, life:10, type:'coin'});
+  for(let i of items){
+    if(i.type==='coin'&&!i.got){
+      i.bob+=0.05;
+      if(rectCollide(p.x,p.y,p.w,pH,i.x-2,i.y-2+Math.sin(i.bob)*3,28,28)){
+        i.got=true; coins++; score+=5;
+        spawnParticles(i.x+12,i.y+12,4,'coin');
       }
     }
-    
-    // Fireballs
-    if(item.type === 'fireball'){
-      item.x += item.vx;
-      item.y += item.vy;
-      item.vy += 0.3;
-      item.life--;
-      if(item.life <= 0) item.got = true;
-      
-      // Hit enemies
-      for(let e of mEnemies){
+    if(i.type==='fire'&&i.life){
+      i.x+=i.vx; i.y+=i.vy; i.vy+=0.3; i.life--;
+      for(let e of enemies){
         if(!e.alive) continue;
-        if(collides(item.x, item.y, item.w, item.h, e.x, e.y, e.w, e.h)){
-          e.alive = false;
-          item.got = true;
-          mScore += 30;
-          for(let i=0;i<6;i++) mParticles.push({x:e.x+14, y:e.y+14, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8-4, life:15, type:'stomp'});
+        if(rectCollide(i.x,i.y,i.w,i.h,e.x,e.y,e.w,e.h)){
+          e.alive=false; score+=30; i.life=0;
+          spawnParticles(e.x+14,e.y+14,6,'stomp');
         }
       }
     }
-    
-    // Mushroom power-up
-    if(item.type === 'mushroom' && !item.got){
-      if(collides(p.x, p.y, p.w, pH, item.x, item.y, item.w, item.h)){
-        item.got = true;
-        mPower = Math.min(mPower + 1, 2);
-        mScore += 50;
-        p.invincible = 60;
-        for(let i=0;i<8;i++) mParticles.push({x:p.x+12, y:p.y, vx:(Math.random()-0.5)*8, vy:-Math.random()*6-2, life:20, type:'power'});
+    if(i.type==='mushroom'&&!i.got){
+      if(rectCollide(p.x,p.y,p.w,pH,i.x,i.y,i.w,i.h)){
+        i.got=true; power=Math.min(power+1,2); score+=50; p.inv=60;
+        spawnParticles(p.x+12,p.y,8,'power');
       }
     }
   }
+  items=items.filter(i=>i.type!=='fire'||i.life>0);
   
-  // Clear collected
-  mItems = mItems.filter(i => !i.got || i.type === 'fireball');
-  
-  // Score
-  document.getElementById('marioScore').textContent = mScore;
-  document.getElementById('marioLives').textContent = '❤️ '+mLives;
-  document.getElementById('marioCoins').textContent = '🪙 '+mCoins;
-  
-  // === DRAW ===
-  drawMario(w, h);
-  
-  mAnim = requestAnimationFrame(marioLoop);
+  document.getElementById('marioScore').textContent=score;
+  document.getElementById('marioLives').textContent='❤️ '+lives;
+  document.getElementById('marioCoins').textContent='🪙 '+coins;
 }
 
-// ===== DRAW =====
-function drawMario(w, h){
-  const ctx = mctx;
-  const world = WORLDS[mWorld-1];
-  
-  ctx.clearRect(0, 0, w, h);
+function draw(){
+  let wo=WORLDS[world-1], w=c.width, h=c.height;
+  ctx.clearRect(0,0,w,h);
   
   // Sky
-  ctx.fillStyle = world.bg;
-  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle=wo.bg; ctx.fillRect(0,0,w,h);
   
   // Clouds
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillStyle='rgba(255,255,255,0.5)';
   for(let i=0;i<3;i++){
-    const cx = ((i*280 - mCamera*0.3) % 840 + 840) % 840 - 80;
-    const cy = 30 + i*25;
-    ctx.beginPath(); ctx.arc(cx, cy, 40, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx+20, cy-6, 30, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx-15, cy+3, 25, 0, Math.PI*2); ctx.fill();
+    let cx=((i*280-camera*0.3)%840+840)%840-80;
+    ctx.beginPath(); ctx.arc(cx,30+i*25,35,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+18,22+i*25,28,0,Math.PI*2); ctx.fill();
   }
   
   // Hills
-  ctx.fillStyle = world.ground;
+  ctx.fillStyle=wo.grass;
   for(let i=0;i<3;i++){
-    const hx = ((i*350 - mCamera*0.4) % 1050 + 1050) % 1050 - 150;
-    const hh = 40 + Math.sin(i*1.7)*15;
-    ctx.beginPath(); ctx.moveTo(hx, h-80);
-    ctx.quadraticCurveTo(hx+40, h-80-hh-15, hx+80, h-80);
+    let hx=((i*350-camera*0.4)%1050+1050)%1050-100;
+    ctx.beginPath();
+    ctx.moveTo(hx,GROUND_Y_ROW*T);
+    ctx.quadraticCurveTo(hx+50,GROUND_Y_ROW*T-70,hx+100,GROUND_Y_ROW*T);
     ctx.fill();
   }
   
-  // Level blocks
-  const H = mLevelData.length;
-  const W = mLevelData[0].length;
-  
-  for(let y=0;y<H;y++){
-    for(let x=0;x<W;x++){
-      const t = mLevelData[y][x];
-      if(t===0) continue;
-      const sx = x*32 - mCamera;
-      const sy = y*32;
-      if(sx < -40 || sx > w+40) continue;
-      
-      if(t===1){
-        // Ground
-        ctx.fillStyle = world.brick;
-        ctx.fillRect(sx, sy, 32, 32);
-        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth=1;
-        ctx.strokeRect(sx, sy, 32, 32);
-        // Grass on top
-        if(mLevelData[y-1] && mLevelData[y-1][x]===0){
-          ctx.fillStyle = world.ground;
-          ctx.fillRect(sx, sy-3, 32, 6);
-        }
-      }
-      else if(t===2 || t===3){
-        // Pipe
-        ctx.fillStyle = '#2a9a2a';
-        ctx.fillRect(sx-4, sy+(t===3?0:8), 40, t===3?40:24);
-        ctx.fillStyle = '#3ab43a';
-        ctx.fillRect(sx, sy+(t===3?0:8), 32, t===3?40:24);
-        ctx.fillStyle = '#5ad45a';
-        ctx.fillRect(sx+4, sy+(t===3?0:8), 6, t===3?40:24);
-        if(t===3){ ctx.fillStyle='#2a9a2a'; ctx.fillRect(sx-6, sy-4, 44, 8); ctx.fillStyle='#3ab43a'; ctx.fillRect(sx-2, sy-4, 36, 8); }
-      }
-      else if(t===4){
-        // ? Block
-        const b = mBlocks.find(bx => bx.x===x*32 && bx.y===y*32 && bx.type==='question');
-        const bump = (b && b.bumpY) || 0;
-        if(b && b.hit){
-          ctx.fillStyle = '#8a6a4a';
-          ctx.fillRect(sx, sy+bump, 32, 32);
-          ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth=2; ctx.strokeRect(sx, sy+bump, 32, 32);
-        } else {
-          ctx.fillStyle = '#c84c0c';
-          ctx.fillRect(sx, sy+bump, 32, 32);
-          ctx.strokeStyle = '#e8a828'; ctx.lineWidth=2; ctx.strokeRect(sx, sy+bump, 32, 32);
-          ctx.fillStyle = '#FFE600'; ctx.font = 'bold 18px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
-          ctx.fillText('?', sx+16, sy+16+bump);
-        }
-      }
-      else if(t===5){
-        // Brick
-        ctx.fillStyle = world.brick;
-        ctx.fillRect(sx, sy, 32, 32);
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth=1;
-        ctx.strokeRect(sx, sy, 32, 32);
-        ctx.strokeRect(sx, sy+16, 32, 1);
-        ctx.strokeRect(sx+16, sy, 1, 32);
-      }
-    }
-  }
-  
-  // Items (coins)
-  for(let item of mItems){
-    if(item.got && item.type !== 'fireball') continue;
-    const sx = item.x - mCamera;
-    if(sx < -20 || sx > w+20) continue;
+  // Level tiles
+  for(let y=0;y<15;y++) for(let x=0;x<200;x++){
+    let t=level[y][x];
+    if(t===0) continue;
+    let sx=x*T-camera, sy=y*T;
+    if(sx<-T||sx>w+T) continue;
     
-    if(item.type === 'coin'){
-      const bob = Math.sin(item.bob)*4;
-      ctx.save();
-      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 8;
-      ctx.font = '22px sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText('🪙', sx+8, item.y+8+bob);
+    if(t===1){ // Ground
+      ctx.fillStyle=wo.brick; ctx.fillRect(sx,sy,T,T);
+      ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=0.5; ctx.strokeRect(sx,sy,T,T);
+      if(y>0&&level[y-1][x]===0){ ctx.fillStyle=wo.grass; ctx.fillRect(sx,sy-3,T,6); }
+    } else if(t===2||t===3){ // Pipe
+      let lip=t===3?4:0;
+      ctx.fillStyle='#2a9a2a'; ctx.fillRect(sx-5,sy+lip,T+10,T-lip);
+      ctx.fillStyle='#3ab43a'; ctx.fillRect(sx,sy+lip,T,T-lip);
+      ctx.fillStyle='#5ad45a'; ctx.fillRect(sx+4,sy+lip,6,T-lip);
+      if(t===3){ ctx.fillStyle='#2a9a2a'; ctx.fillRect(sx-7,sy-4,T+14,8); ctx.fillStyle='#3ab43a'; ctx.fillRect(sx-2,sy-4,T+4,8); }
+    } else if(t===4){ // ? block
+      let b=blocks.find(b=>b.x===x*T&&b.y===y*T);
+      let bp=(b&&b.bump)||0;
+      if(b&&b.hit){ ctx.fillStyle='#8a6a4a'; ctx.fillRect(sx,sy+bp,T,T); ctx.strokeStyle='#6a4a2a'; ctx.lineWidth=2; ctx.strokeRect(sx,sy+bp,T,T); }
+      else {
+        ctx.fillStyle='#c84c0c'; ctx.fillRect(sx,sy+bp,T,T);
+        ctx.strokeStyle='#e8a828'; ctx.lineWidth=2; ctx.strokeRect(sx,sy+bp,T,T);
+        ctx.fillStyle='#FFE600'; ctx.font='bold 18px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText('?',sx+16,sy+16+bp);
+      }
+    } else if(t===5){ // Brick
+      ctx.fillStyle=wo.brick; ctx.fillRect(sx,sy,T,T);
+      ctx.strokeStyle='rgba(0,0,0,0.15)'; ctx.lineWidth=1; ctx.strokeRect(sx,sy,T,T);
+      ctx.beginPath(); ctx.moveTo(sx,sy+16); ctx.lineTo(sx+32,sy+16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx+16,sy); ctx.lineTo(sx+16,sy+32); ctx.stroke();
+    } else if(t===6){ // Coin
+      let item=items.find(i=>Math.abs(i.x-(x*T+4))<5);
+      let bob=item?Math.sin(item.bob)*4:0;
+      ctx.save(); ctx.shadowColor='#FFD700'; ctx.shadowBlur=8;
+      ctx.font='20px sans-serif'; ctx.textAlign='center';
+      ctx.fillText('🪙',sx+16,sy+16+bob);
       ctx.restore();
-    }
-    if(item.type === 'fireball'){
-      ctx.font = '18px sans-serif'; ctx.textAlign='center';
-      ctx.fillText('🔥', sx, item.y);
-    }
-    if(item.type === 'mushroom' && !item.got){
-      ctx.font = '24px sans-serif'; ctx.textAlign='center';
-      ctx.fillText('🍄', sx+8, item.y+12);
     }
   }
   
   // Enemies
-  for(let e of mEnemies){
-    if(!e.alive && e.squished <= 0) continue;
-    const sx = e.x - mCamera;
-    if(sx < -40 || sx > w+40) continue;
-    
-    if(e.squished > 0 && e.squished < 28){
-      // Squished
-      ctx.font = '20px sans-serif'; ctx.textAlign='center';
-      ctx.fillText('👾', sx+14, e.y+24);
-    } else if(e.alive){
-      const wobble = Math.sin(mPlayer.runFrame*3 + e.x) * 2;
-      ctx.font = '26px sans-serif'; ctx.textAlign='center';
-      ctx.fillText('👾', sx+14, e.y+20 + wobble);
-    }
+  for(let e of enemies){
+    if(!e.alive&&e.squish<=0) continue;
+    let sx=e.x-camera;
+    if(sx<-40||sx>w+40) continue;
+    if(e.squish>5){ ctx.font='18px sans-serif'; ctx.textAlign='center'; ctx.fillText('👾',sx+14,e.y+26); }
+    else if(e.alive){ let wb=Math.sin(Date.now()*0.005+e.x)*3; ctx.font='24px sans-serif'; ctx.textAlign='center'; ctx.fillText('👾',sx+14,e.y+20+wb); }
+  }
+  
+  // Items
+  for(let i of items){
+    if(i.type!=='coin'&&i.type!=='fire'&&i.type!=='mushroom') continue;
+    if(i.got) continue;
+    let sx=i.x-camera;
+    if(sx<-20||sx>w+20) continue;
+    if(i.type==='coin'){ ctx.save(); ctx.shadowColor='#FFD700'; ctx.shadowBlur=6; ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.fillText('🪙',sx+12,i.y+12); ctx.restore(); }
+    if(i.type==='fire'){ ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.fillText('🔥',sx+5,i.y+8); }
+    if(i.type==='mushroom'){ ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.fillText('🍄',sx+12,i.y+12); }
   }
   
   // Particles
-  for(let p of mParticles){
-    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
-    ctx.globalAlpha = p.life / 15;
-    ctx.font = '14px sans-serif'; ctx.textAlign='center';
-    ctx.fillText(p.type==='coin'?'🪙':(p.type==='break'?'🧱':(p.type==='power'?'✨':'💥')), p.x, p.y);
-    ctx.globalAlpha = 1;
-  }
-  mParticles = mParticles.filter(p => p.life > 0);
+  particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.3; p.life--;
+    ctx.globalAlpha=p.life/12;
+    ctx.font='12px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(p.type==='coin'?'🪙':(p.type==='break'?'•':(p.type==='power'?'✨':'💥')),p.x,p.y);
+  });
+  ctx.globalAlpha=1;
+  particles=particles.filter(p=>p.life>0);
   
-  // === PLAYER ===
-  const px = p.x - mCamera;
-  const py = p.y;
+  // Player
+  let px=player.x-camera, py=player.y;
+  if(player.inv>0&&Math.floor(player.inv/4)%2===0) return;
   
-  if(p.invincible > 0 && Math.floor(p.invincible / 4) % 2 === 0) return; // Flash
+  ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.ellipse(px+12,GROUND_Y_ROW*T+4,14,3,0,0,Math.PI*2); ctx.fill();
   
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
-  ctx.beginPath(); ctx.ellipse(px+12, mLevelData.length*32-4, 14, 3, 0, 0, Math.PI*2);
-  ctx.fill();
-  
-  // Draw Mario
-  const facing = p.facing || 1;
   ctx.save();
-  if(facing < 0) ctx.scale(-1, 1);
-  const dx = facing < 0 ? -px - p.w : px;
+  if(player.facing<0) ctx.scale(-1,1);
+  let dx=player.facing<0?-px-player.w:px;
   
-  if(p.ducking && p.onGround){
-    ctx.font = '24px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('🏃', dx+12, py+22);
-  } else if(!p.onGround){
-    ctx.font = '30px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('🏃', dx+12, py+22);
-  } else {
-    const rf = Math.floor(p.runFrame * 4) % 4;
-    ctx.font = '28px sans-serif'; ctx.textAlign = 'center';
-    if(rf === 1 || rf === 3) ctx.fillText('🏃', dx+12, py+24);
-    else ctx.fillText('🚶', dx+12, py+24);
-  }
+  if(player.ducking&&player.onGround){ ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏃',dx+12,py+22); }
+  else if(!player.onGround){ ctx.font='28px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏃',dx+12,py+22); }
+  else { ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.fillText(Math.floor(Date.now()/150)%2===0?'🏃':'🚶',dx+12,py+24); }
   ctx.restore();
-  
-  // Star effect
-  if(mStarTimer > 0){
-    ctx.fillStyle = `rgba(255,255,0,${0.2 + Math.sin(mStarTimer*0.3)*0.1})`;
-    ctx.fillRect(px-4, py-4, p.w+8, p.h+8);
-  }
 }
 
-// ===== COLLISION =====
-function collides(ax, ay, aw, ah, bx, by, bw, bh){
-  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+function rectCollide(ax,ay,aw,ah,bx,by,bw,bh){ return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by; }
+
+function spawnParticles(x,y,n,type){
+  for(let i=0;i<n;i++) particles.push({x,y,vx:(Math.random()-0.5)*6,vy:-Math.random()*6-3,life:12,type});
 }
 
-// ===== PLAYER HIT =====
 function playerHit(){
-  if(mPlayer.invincible > 0) return;
-  if(mPower > 0){
-    mPower--;
-    mPlayer.invincible = 60;
-    for(let i=0;i<6;i++) mParticles.push({x:mPlayer.x+12, y:mPlayer.y, vx:(Math.random()-0.5)*6, vy:-Math.random()*4-2, life:15, type:'stomp'});
-  } else {
-    playerDie();
-  }
+  if(player.inv>0) return;
+  if(power>0){ power--; player.inv=60; spawnParticles(player.x+12,player.y,6,'stomp'); }
+  else playerDie();
 }
 
 function playerDie(){
-  mLives--;
-  if(mLives <= 0){
-    gameOverMario();
-  } else {
-    // Respawn
-    loadLevel();
-  }
+  lives--;
+  if(lives<=0){ gameOverMario(); }
+  else { loadLevel(); }
 }
 
 function gameOverMario(){
-  mRun = false;
-  if(mAnim) cancelAnimationFrame(mAnim);
+  run=false; if(anim) cancelAnimationFrame(anim);
   document.getElementById('marioOverlay').classList.remove('hidden');
-  document.getElementById('marioTitle').textContent = '💥 GAME OVER';
-  document.getElementById('marioSub').textContent = 'SCORE: '+mScore+' | 🪙 '+mCoins;
-  document.getElementById('marioStartBtn').textContent = '🔄 JOGAR DE NOVO';
-  document.getElementById('worldSelect').innerHTML = '';
-  if(mScore > 100) celebrar();
+  document.getElementById('marioTitle').textContent='💥 GAME OVER';
+  document.getElementById('marioSub').textContent='SCORE: '+score+' | 🪙 '+coins;
+  document.getElementById('marioStartBtn').textContent='🔄 JOGAR DE NOVO';
+  document.getElementById('worldSelect').innerHTML='';
+  if(score>50) celebrar();
 }
 
-// ===== MENU SETUP =====
-document.getElementById('marioStartBtn').addEventListener('click', ()=>{
-  const ws = document.getElementById('worldSelect');
-  if(ws.children.length === 0){
-    showWorldSelect();
-  } else {
-    startMario(parseInt(document.getElementById('marioStartBtn').dataset.world) || 1);
-  }
+// ===== CONTROLS =====
+['Left','Right','Jump','Down','Attack'].forEach(name=>{
+  let id='btn'+name;
+  let el=document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('touchstart',e=>{e.preventDefault(); keys[name.toLowerCase()]=true;});
+  el.addEventListener('touchend',e=>{e.preventDefault(); keys[name.toLowerCase()]=false;});
+  el.addEventListener('mousedown',e=>{e.preventDefault(); keys[name.toLowerCase()]=true;});
+  el.addEventListener('mouseup',e=>{e.preventDefault(); keys[name.toLowerCase()]=false;});
+});
+// Up also = jump
+document.getElementById('btnUp').addEventListener('touchstart',e=>{e.preventDefault(); keys.jump=true;});
+document.getElementById('btnUp').addEventListener('touchend',e=>{e.preventDefault(); keys.jump=false;});
+
+document.onkeydown=e=>{
+  if(e.key==='ArrowLeft') keys.left=true;
+  if(e.key==='ArrowRight') keys.right=true;
+  if(e.key==='ArrowUp'||e.key===' ') keys.jump=true;
+  if(e.key==='ArrowDown') keys.down=true;
+  if(e.key==='x'||e.key==='z') keys.attack=true;
+};
+document.onkeyup=e=>{
+  if(e.key==='ArrowLeft') keys.left=false;
+  if(e.key==='ArrowRight') keys.right=false;
+  if(e.key==='ArrowUp'||e.key===' ') keys.jump=false;
+  if(e.key==='ArrowDown') keys.down=false;
+  if(e.key==='x'||e.key==='z') keys.attack=false;
+};
+
+// ===== MENU =====
+document.getElementById('marioStartBtn').addEventListener('click',()=>{
+  let ws=document.getElementById('worldSelect');
+  if(ws.children.length===0) showWorlds();
+  else startMario(parseInt(document.getElementById('marioStartBtn').dataset.world)||1);
 });
 
-function showWorldSelect(){
-  const ws = document.getElementById('worldSelect');
-  ws.innerHTML = '';
-  document.getElementById('marioTitle').textContent = '🌍 SELECIONE O MUNDO';
-  document.getElementById('marioSub').textContent = '';
-  document.getElementById('marioStartBtn').textContent = '▶ INICIAR';
-  
+function showWorlds(){
+  let ws=document.getElementById('worldSelect');
+  ws.innerHTML='';
+  document.getElementById('marioTitle').textContent='🌍 SELECIONE O MUNDO';
+  document.getElementById('marioSub').textContent='';
+  document.getElementById('marioStartBtn').textContent='▶ INICIAR';
   WORLDS.forEach((w,i)=>{
-    const btn = document.createElement('div');
-    btn.className = 'world-btn';
-    btn.innerHTML = `<span class="wb-icon">${['🌿','🏜️','🕳️','❄️','🌲','⛰️','🏰'][i]}</span>MUNDO ${i+1}`;
-    btn.onclick = ()=>{
+    let btn=document.createElement('div');
+    btn.className='world-btn';
+    btn.innerHTML=`<span class="wb-icon">${['🌿','🏜️','🕳️','❄️','🌲','⛰️','🏰'][i]}</span>MUNDO ${i+1}`;
+    btn.onclick=()=>{
       document.querySelectorAll('.world-btn').forEach(b=>b.style.borderColor='rgba(255,255,255,.3)');
-      btn.style.borderColor = '#FFE600';
-      document.getElementById('marioStartBtn').dataset.world = i+1;
-      document.getElementById('marioStartBtn').textContent = '▶ MUNDO '+(i+1)+' - '+w.name;
+      btn.style.borderColor='#FFE600';
+      document.getElementById('marioStartBtn').dataset.world=i+1;
+      document.getElementById('marioStartBtn').textContent='▶ MUNDO '+(i+1)+' - '+w.name;
     };
     ws.appendChild(btn);
   });
-  // Auto-select first
-  ws.firstChild.click();
+  ws.firstChild?.click();
 }
 
-// Init on load
-document.addEventListener('DOMContentLoaded', ()=>{
-  showWorldSelect();
-});
+document.addEventListener('DOMContentLoaded',showWorlds);
