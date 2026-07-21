@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🏃 Corrida - Jogo da Sara</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="game-page" style="display:flex">
+  <div class="game-top">
+    <a class="back-btn" href="index.html">✕</a>
+    <span class="gt-title">🏃 CORRIDA</span>
+    <span class="gt-score" id="raceScore">TAPS: 0</span>
+  </div>
+  <div class="game-area">
+    <div class="race-picker" id="racePicker">
+      <div class="race-pick" data-animal="🐰">🐰</div>
+      <div class="race-pick" data-animal="🐱">🐱</div>
+      <div class="race-pick" data-animal="🐶">🐶</div>
+      <div class="race-pick" data-animal="🐸">🐸</div>
+    </div>
+    <div class="race-track" id="raceTrack"><div class="race-finish"></div></div>
+    <div class="race-tap-area" id="raceTapArea">👆 ESCOLHA SEU ANIMAL!</div>
+  </div>
+</div>
+<div class="celebration" id="celebration"></div>
+<script src="js/shared.js"></script>
+<script src="js/race.js"></script>
+</body>
+</html>
