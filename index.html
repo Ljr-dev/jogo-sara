@@ -106,6 +106,28 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .tracing-mode-btn:active{transform:scale(.9)}
 .tracing-mode-btn.active{border-color:#66bb6a;background:#e8f5e9}
 
+/* ===== WHACK-A-MOLE ===== */
+.whack-content{max-width:450px!important}
+.whack-scorebar{display:flex;justify-content:space-between;font-size:clamp(18px,4vw,28px);font-weight:700;color:#5a3e2b;padding:0 8px 12px}
+.whack-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,3vw,20px);padding:clamp(8px,2vw,16px);background:linear-gradient(180deg,#8BC34A,#689F38);border-radius:24px;position:relative}
+.whack-hole{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.whack-hole-front{width:100%;height:70%;background:radial-gradient(ellipse at center,#5D4037,#3E2723);border-radius:50%;position:absolute;bottom:0;z-index:2;box-shadow:inset 0 -8px 20px rgba(0,0,0,.3)}
+.whack-animal{position:absolute;bottom:15%;font-size:clamp(40px,12vw,70px);z-index:1;transform:translateY(120%);transition:transform .2s cubic-bezier(.34,1.56,.64,1);cursor:pointer;filter:drop-shadow(0 4px 8px rgba(0,0,0,.2))}
+.whack-animal.active{transform:translateY(0%)}
+.whack-animal.hit{transform:translateY(0%) scale(0.3);opacity:0;transition:all .15s}
+.whack-footer{text-align:center;margin-top:12px}
+.whack-hammer{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ctext y='32' font-size='32'%3E🔨%3C/text%3E%3C/svg%3E") 5 5, auto}
+
+/* ===== BABY GAME ===== */
+.baby-display{text-align:center;margin:8px 0}
+.baby-emoji{font-size:clamp(60px,16vw,100px);display:block;animation:babyBounce 2s ease-in-out infinite}
+@keyframes babyBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.baby-need{font-size:clamp(36px,10vw,60px);margin-top:-8px;display:block}
+.baby-hint{font-size:clamp(16px,3vw,22px);color:#8a7a6a;font-weight:700}
+.baby-hearts{text-align:center;font-size:clamp(20px,4vw,32px);margin:6px 0;letter-spacing:4px}
+.baby-hearts .heart-filled{color:#e53935}
+.baby-hearts .heart-empty{color:#ddd}
+
 /* ===== CELEBRATION ===== */
 .celebration-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;pointer-events:none}
 .celebration-overlay.active{display:block}
@@ -335,6 +357,19 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
             <span class="map-step-label">QUAL E?<br><small>ADIVINHE</small></span>
           </div>
         </div>
+        <!-- LINHA 3 -->
+        <div class="map-row-connector">⬇️</div>
+        <div class="map-row">
+          <div class="map-step">
+            <div class="map-circle step-3" id="level7Btn" data-level="7">👶<span class="lock-icon">🔒</span></div>
+            <span class="map-step-label">MAMAE<br><small>CUIDA DO BEBE</small></span>
+          </div>
+          <span class="map-connector">➡️</span>
+          <div class="map-step">
+            <div class="map-circle step-3" id="level8Btn" data-level="8">🐰<span class="lock-icon">🔒</span></div>
+            <span class="map-step-label">COELHO<br><small>BATE MARTELO</small></span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -417,6 +452,39 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
   </div>
 </div>
 
+<!-- ===== WHACK-A-MOLE OVERLAY ===== -->
+<div class="modal-overlay" id="whackModal">
+  <div class="modal-content whack-content">
+    <button class="modal-close" id="whackClose">✕</button>
+    <div class="modal-title" id="whackTitle">🐰 BATE MARTELO!</div>
+    <div class="whack-scorebar">
+      <span id="whackScore">🔨 0</span>
+      <span id="whackTimer">⏱️ 30</span>
+    </div>
+    <div class="whack-grid" id="whackGrid">
+      <div class="whack-hole" data-hole="0">
+        <div class="whack-hole-front"></div>
+        <div class="whack-animal" id="whackAnimal0"></div>
+      </div>
+      <div class="whack-hole" data-hole="1">
+        <div class="whack-hole-front"></div>
+        <div class="whack-animal" id="whackAnimal1"></div>
+      </div>
+      <div class="whack-hole" data-hole="2">
+        <div class="whack-hole-front"></div>
+        <div class="whack-animal" id="whackAnimal2"></div>
+      </div>
+      <div class="whack-hole" data-hole="3">
+        <div class="whack-hole-front"></div>
+        <div class="whack-animal" id="whackAnimal3"></div>
+      </div>
+    </div>
+    <div class="whack-footer">
+      <button class="treasure-btn" id="whackRestart" style="font-size:clamp(14px,2.5vw,18px);padding:10px 24px">🔄 JOGAR DE NOVO</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== CELEBRATION CONTAINER ===== -->
 <div class="celebration-overlay" id="celebrationOverlay"></div>
 
@@ -491,6 +559,26 @@ const WORDS = [
   { w:'DINOSSAURO',e:'🦕'},{ w:'CABECA',   e:'👤' },
 ];
 
+// ============================================================
+//  BABY NEEDS - Módulo Mamãe e Bebê
+// ============================================================
+const BABY_NEEDS = [
+  { need:'🍼', needText:'BEBE COM FOME',      item:'🍼', itemText:'MAMADEIRA' },
+  { need:'😴', needText:'BEBE COM SONO',      item:'🛏️', itemText:'BERCO' },
+  { need:'🧸', needText:'BEBE QUER BRINCAR',  item:'🧸', itemText:'URSINHO' },
+  { need:'🛁', needText:'BEBE PRECISA DE BANHO',item:'🛁', itemText:'BANHEIRA' },
+  { need:'🥣', needText:'BEBE VAI COMER',     item:'🥣', itemText:'PAPINHA' },
+  { need:'👟', needText:'BEBE VAI PASSEAR',   item:'👟', itemText:'SAPATINHO' },
+  { need:'🎵', needText:'BEBE QUER MUSICA',   item:'🎵', itemText:'MUSICA' },
+];
+
+const WRONG_ITEMS = [
+  { item:'📺', text:'TV' }, { item:'📱', text:'CELULAR' },
+  { item:'🚗', text:'CARRO' }, { item:'💻', text:'NOTEBOOK' },
+  { item:'🔪', text:'FACA' }, { item:'🧹', text:'VASSOURA' },
+  { item:'🧲', text:'IMA' }, { item:'📦', text:'CAIXA' },
+];
+
 const LEVELS = [
   { id: 1, nome:'VOGAIS',    icon:'🅰️', letras:['A','E','I','O','U'],                                  rounds:3 },
   { id: 2, nome:'CONSOANTES',icon:'🔤', letras:['B','C','D','F','G','H','J','L','M','N','P','Q','R','S','T','V','X','Z'], rounds:3 },
@@ -498,6 +586,8 @@ const LEVELS = [
   { id: 4, nome:'LER',       icon:'📖', rounds:3, type:'word-read' },
   { id: 5, nome:'COMPLETAR', icon:'🧩', rounds:3, type:'word-complete' },
   { id: 6, nome:'QUAL E?',   icon:'❓', rounds:3, type:'word-pick' },
+  { id: 7, nome:'MAMAE',     icon:'👶', rounds:3, type:'baby' },
+  { id: 8, nome:'COELHO',    icon:'🐰', rounds:10, type:'whack' },
 ];
 
 // ============================================================
@@ -681,78 +771,35 @@ function updateMap(){
   const badge = document.getElementById('levelBadge');
   badge.textContent = `NÍVEL ${state.levelUnlocked}`;
 
-  [1,2,3,4,5,6].forEach(lvl=>{
+  [1,2,3,4,5,6,7,8].forEach(lvl=>{
     const btn = document.getElementById('level'+lvl+'Btn');
     if(!btn) return;
     const isUnlocked = lvl <= state.levelUnlocked;
     const isCompleted = state.levelsCompleted.includes(lvl);
 
     btn.className = 'map-circle';
-    if(isCompleted){
-      btn.classList.add('step-2');
-    } else if(isUnlocked){
-      btn.classList.add('step-1');
-    } else {
-      btn.classList.add('step-3');
-    }
+    if(isCompleted) btn.classList.add('step-2');
+    else if(isUnlocked) btn.classList.add('step-1');
+    else btn.classList.add('step-3');
 
     let lock = btn.querySelector('.lock-icon');
     if(!isUnlocked){
-      if(!lock){
-        lock = document.createElement('span');
-        lock.className = 'lock-icon';
-        lock.textContent = '🔒';
-        btn.appendChild(lock);
-      }
-    } else if(lock){
-      lock.remove();
-    }
+      if(!lock){ lock = document.createElement('span'); lock.className = 'lock-icon'; lock.textContent = '🔒'; btn.appendChild(lock); }
+    } else if(lock) lock.remove();
 
     let comp = btn.querySelector('.completed-badge');
     if(isCompleted){
-      if(!comp){
-        comp = document.createElement('span');
-        comp.className = 'completed-badge';
-        comp.textContent = '✅';
-        btn.appendChild(comp);
-      }
-    } else if(comp){
-      comp.remove();
-    }
+      if(!comp){ comp = document.createElement('span'); comp.className = 'completed-badge'; comp.textContent = '✅'; btn.appendChild(comp); }
+    } else if(comp) comp.remove();
   });
 }
 
 // ============================================================
-//  HELPERS - Words
+//  HELPERS
 // ============================================================
 function getRandomWord(exclude){
   const pool = WORDS.filter(w => !exclude.includes(w.w));
-  if(pool.length === 0) return WORDS[Math.floor(Math.random()*WORDS.length)];
-  return pool[Math.floor(Math.random()*pool.length)];
-}
-
-// ============================================================
-//  LEVEL GAME
-// ============================================================
-function startLevel(levelId){
-  if(levelId > state.levelUnlocked) return;
-  if(state.gameActive) return;
-
-  const level = LEVELS.find(l=>l.id===levelId);
-  if(!level) return;
-
-  state.currentLevel = levelId;
-  state.gameActive = true;
-  state.gameCorrect = 0;
-  state.gameRound = 0;
-  state.gameRoundsNeeded = level.rounds;
-  state.gameUsedLetters = [];
-  state.gameUsedWords = [];
-
-  const modal = document.getElementById('gameModal');
-  modal.classList.add('open');
-  document.getElementById('progressFill').style.width = '0%';
-  nextRound();
+  return pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : WORDS[Math.floor(Math.random()*WORDS.length)];
 }
 
 function getRandomLetter(levelId, exclude){
@@ -765,11 +812,36 @@ function getRandomLetter(levelId, exclude){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 
-function nextRound(){
-  if(state.gameCorrect >= state.gameRoundsNeeded){
-    finishLevel();
+// ============================================================
+//  LEVEL GAME - nextRound
+// ============================================================
+function startLevel(levelId){
+  if(levelId > state.levelUnlocked || state.gameActive) return;
+  const level = LEVELS.find(l=>l.id===levelId);
+  if(!level) return;
+
+  state.currentLevel = levelId;
+  state.gameActive = true;
+  state.gameCorrect = 0;
+  state.gameRound = 0;
+  state.gameRoundsNeeded = level.rounds;
+  state.gameUsedLetters = [];
+  state.gameUsedWords = [];
+
+  if(levelId === 8){
+    // Whack-a-mole uses special overlay
+    startWhackGame();
     return;
   }
+
+  const modal = document.getElementById('gameModal');
+  modal.classList.add('open');
+  document.getElementById('progressFill').style.width = '0%';
+  nextRound();
+}
+
+function nextRound(){
+  if(state.gameCorrect >= state.gameRoundsNeeded){ finishLevel(); return; }
 
   state.gameRound++;
   const level = LEVELS.find(l=>l.id===state.currentLevel);
@@ -779,166 +851,130 @@ function nextRound(){
   const mt = document.getElementById('modalTitle');
   const container = document.getElementById('gameCards');
   container.innerHTML = '';
+  ld.style.display = 'block';
 
-  // --- NÍVEL 4: LER PALAVRAS (mostra palavra, escolhe emoji) ---
-  if(state.currentLevel === 4){
-    const word = getRandomWord(state.gameUsedWords || []);
-    state.gameTarget = word.w;
-    state.gameUsedWords = state.gameUsedWords || [];
-    state.gameUsedWords.push(word.w);
+  // --- NÍVEL 7: MAMÃE E BEBÊ ---
+  if(state.currentLevel === 7){
+    const need = BABY_NEEDS[Math.floor(Math.random() * BABY_NEEDS.length)];
+    state.gameTarget = need.item;
 
-    ld.style.display = 'block';
-    lb.style.fontSize = 'clamp(36px,10vw,60px)';
-    lb.textContent = word.w;
-    lh.innerHTML = `QUAL FIGURA E ESSA PALAVRA?`;
-    mt.textContent = `📖 LEIA A PALAVRA`;
+    lb.style.fontSize = 'clamp(60px,16vw,100px)';
+    lb.innerHTML = `👶<span class="baby-need">${need.need}</span>`;
+    lh.innerHTML = `<span class="baby-hint">${need.needText}</span>`;
+    mt.textContent = '👶 MAMAE CUIDA DO BEBE';
 
-    const wrongPool = WORDS.filter(w => w.w !== word.w).sort(()=>Math.random()-.5).slice(0,2);
-    const options = [word, ...wrongPool].sort(()=>Math.random()-.5);
+    // 1 correct + 2 wrong
+    let wrongs = WRONG_ITEMS.sort(()=>Math.random()-.5).slice(0,2);
+    const options = [{item:need.item, text:need.itemText}, ...wrongs].sort(()=>Math.random()-.5);
     container.className = 'game-cards';
 
     options.forEach(opt=>{
       const card = document.createElement('div');
       card.className = 'animal-card';
-      card.dataset.id = opt.w;
-      card.innerHTML = `<span class="animal-emoji">${opt.e}</span><span class="animal-name">${opt.w}</span>`;
-      card.addEventListener('click', ()=>handleWordClick(card, opt.w));
+      card.dataset.id = opt.item;
+      card.innerHTML = `<span class="animal-emoji">${opt.item}</span><span class="animal-name">${opt.text}</span>`;
+      card.addEventListener('click', ()=>handleBabyClick(card, opt.item));
       container.appendChild(card);
     });
 
+    speak(`${need.needText}. O QUE O BEBE PRECISA?`);
+
+  // --- NÍVEL 4: LER PALAVRAS ---
+  } else if(state.currentLevel === 4){
+    const word = getRandomWord(state.gameUsedWords || []);
+    state.gameTarget = word.w;
+    state.gameUsedWords = state.gameUsedWords || []; state.gameUsedWords.push(word.w);
+
+    lb.style.fontSize = 'clamp(36px,10vw,60px)'; lb.textContent = word.w;
+    lh.innerHTML = `QUAL FIGURA E ESSA PALAVRA?`; mt.textContent = `📖 LEIA A PALAVRA`;
+    const wrongPool = WORDS.filter(w => w.w !== word.w).sort(()=>Math.random()-.5).slice(0,2);
+    const options = [word, ...wrongPool].sort(()=>Math.random()-.5);
+    container.className = 'game-cards';
+    options.forEach(opt=>{
+      const card = document.createElement('div'); card.className = 'animal-card'; card.dataset.id = opt.w;
+      card.innerHTML = `<span class="animal-emoji">${opt.e}</span><span class="animal-name">${opt.w}</span>`;
+      card.addEventListener('click', ()=>handleWordClick(card, opt.w)); container.appendChild(card);
+    });
     speak(`LEIA A PALAVRA: ${word.w}`);
 
-  // --- NÍVEL 5: COMPLETAR PALAVRA (emoji + palavra com _ , escolhe letra) ---
+  // --- NÍVEL 5: COMPLETAR ---
   } else if(state.currentLevel === 5){
     const word = getRandomWord(state.gameUsedWords || []);
     state.gameTarget = word.w;
-    state.gameUsedWords = state.gameUsedWords || [];
-    state.gameUsedWords.push(word.w);
-
-    // Pick a random position in the word to blank out
+    state.gameUsedWords = state.gameUsedWords || []; state.gameUsedWords.push(word.w);
     const chars = word.w.split('');
-    let pos;
-    // Avoid blanking first/last if word is short, pick a middle letter
-    if(chars.length <= 3){
-      pos = Math.floor(Math.random() * chars.length);
-    } else {
-      pos = 1 + Math.floor(Math.random() * (chars.length - 2));
-    }
+    let pos = chars.length <= 3 ? Math.floor(Math.random()*chars.length) : 1+Math.floor(Math.random()*(chars.length-2));
     const missingLetter = chars[pos];
     const displayChars = chars.map((c,i)=> i===pos ? '_' : c).join(' ');
-
-    ld.style.display = 'block';
-    lb.style.fontSize = 'clamp(16px,5vw,28px)';
-    lb.textContent = `${word.e}  ${displayChars}`;
-    lh.innerHTML = `QUE LETRA FALTA?`;
-    mt.textContent = `🧩 COMPLETE A PALAVRA`;
-
-    // 3 letter options: correct + 2 random from alphabet
+    lb.style.fontSize = 'clamp(16px,5vw,28px)'; lb.textContent = `${word.e}  ${displayChars}`;
+    lh.innerHTML = `QUE LETRA FALTA?`; mt.textContent = `🧩 COMPLETE A PALAVRA`;
     const alphabetKeys = Object.keys(ALFABETO);
     let distractors = alphabetKeys.filter(l => l !== missingLetter).sort(()=>Math.random()-.5).slice(0,2);
     const options = [missingLetter, ...distractors].sort(()=>Math.random()-.5);
     container.className = 'game-cards';
-
     options.forEach(letra=>{
-      const card = document.createElement('div');
-      card.className = 'letter-card';
-      card.dataset.id = letra;
+      const card = document.createElement('div'); card.className = 'letter-card'; card.dataset.id = letra;
       const d = ALFABETO[letra];
-      card.innerHTML = `<span class="letter-char">${letra}</span><span class="letter-label">${d ? d.nome : ''}</span>`;
-      card.addEventListener('click', ()=>handleCompleteClick(card, letra, missingLetter));
-      container.appendChild(card);
+      card.innerHTML = `<span class="letter-char">${letra}</span><span class="letter-label">${d?d.nome:''}</span>`;
+      card.addEventListener('click', ()=>handleCompleteClick(card, letra, missingLetter)); container.appendChild(card);
     });
-
     speak(`COMPLETE A PALAVRA: QUAL LETRA FALTA?`);
 
-  // --- NÍVEL 6: QUAL E A PALAVRA? (mostra emoji, escolhe palavra) ---
+  // --- NÍVEL 6: QUAL E? ---
   } else if(state.currentLevel === 6){
     const word = getRandomWord(state.gameUsedWords || []);
     state.gameTarget = word.w;
-    state.gameUsedWords = state.gameUsedWords || [];
-    state.gameUsedWords.push(word.w);
-
-    ld.style.display = 'block';
-    lb.style.fontSize = 'clamp(60px,15vw,100px)';
-    lb.textContent = word.e;
-    lh.innerHTML = `QUAL E A PALAVRA?`;
-    mt.textContent = `❓ QUAL E A PALAVRA?`;
-
+    state.gameUsedWords = state.gameUsedWords || []; state.gameUsedWords.push(word.w);
+    lb.style.fontSize = 'clamp(60px,15vw,100px)'; lb.textContent = word.e;
+    lh.innerHTML = `QUAL E A PALAVRA?`; mt.textContent = `❓ QUAL E A PALAVRA?`;
     const wrongPool = WORDS.filter(w => w.w !== word.w).sort(()=>Math.random()-.5).slice(0,2);
     const options = [word, ...wrongPool].sort(()=>Math.random()-.5);
     container.className = 'game-cards';
-
     options.forEach(opt=>{
-      const card = document.createElement('div');
-      card.className = 'letter-card';
-      card.style.width = 'clamp(100px,28vw,180px)';
-      card.style.height = 'clamp(60px,14vw,100px)';
+      const card = document.createElement('div'); card.className = 'letter-card';
+      card.style.width = 'clamp(100px,28vw,180px)'; card.style.height = 'clamp(60px,14vw,100px)';
       card.dataset.id = opt.w;
       card.innerHTML = `<span class="letter-char" style="font-size:clamp(18px,5vw,30px)">${opt.w}</span>`;
-      card.addEventListener('click', ()=>handlePickClick(card, opt.w));
-      container.appendChild(card);
+      card.addEventListener('click', ()=>handlePickClick(card, opt.w)); container.appendChild(card);
     });
-
     speak(`QUAL PALAVRA E ESSA?`);
 
-  // --- NÍVEL 3: ESCOLHER LETRA INICIAL DO ANIMAL ---
+  // --- NÍVEL 3: LETRA INICIAL ---
   } else if(state.currentLevel === 3){
     const targetLetter = getRandomLetter(state.currentLevel, state.gameUsedLetters);
-    state.gameTarget = targetLetter;
-    state.gameUsedLetters.push(targetLetter);
+    state.gameTarget = targetLetter; state.gameUsedLetters.push(targetLetter);
     const targetData = ALFABETO[targetLetter];
-
-    ld.style.display = 'block';
-    lb.style.fontSize = 'clamp(50px,12vw,90px)';
-    lb.textContent = targetData.emoji;
+    lb.style.fontSize = 'clamp(50px,12vw,90px)'; lb.textContent = targetData.emoji;
     lh.innerHTML = `QUE LETRA COMECA? <span class="hint-emoji">${targetData.emoji}</span>`;
     mt.textContent = '🤔 QUAL E A PRIMEIRA LETRA?';
-
-    let distractors = level.letras.filter(l => l !== targetLetter);
-    distractors = distractors.sort(()=>Math.random()-.5).slice(0,2);
+    let distractors = level.letras.filter(l => l !== targetLetter).sort(()=>Math.random()-.5).slice(0,2);
     const options = [targetLetter, ...distractors].sort(()=>Math.random()-.5);
     container.className = 'game-cards';
-
     options.forEach(letra=>{
-      const d = ALFABETO[letra];
-      const card = document.createElement('div');
-      card.className = 'letter-card';
-      card.dataset.id = letra;
-      card.innerHTML = `<span class="letter-char">${letra}</span><span class="letter-label">${d ? d.nome : ''}</span>`;
-      card.addEventListener('click', ()=>handleLetterClick(card, letra));
-      container.appendChild(card);
+      const d = ALFABETO[letra]; const card = document.createElement('div'); card.className = 'letter-card'; card.dataset.id = letra;
+      card.innerHTML = `<span class="letter-char">${letra}</span><span class="letter-label">${d?d.nome:''}</span>`;
+      card.addEventListener('click', ()=>handleLetterClick(card, letra)); container.appendChild(card);
     });
-
     speak(`QUAL E A PRIMEIRA LETRA DE ${targetData.nome}?`);
 
-  // --- NÍVEIS 1 e 2: MOSTRAR LETRA, ESCOLHER ANIMAL ---
+  // --- NÍVEIS 1 e 2: LETRA → ANIMAL ---
   } else {
     const targetLetter = getRandomLetter(state.currentLevel, state.gameUsedLetters);
-    state.gameTarget = targetLetter;
-    state.gameUsedLetters.push(targetLetter);
+    state.gameTarget = targetLetter; state.gameUsedLetters.push(targetLetter);
     const targetData = ALFABETO[targetLetter];
-
-    ld.style.display = 'block';
-    lb.style.fontSize = 'clamp(80px,20vw,160px)';
-    lb.textContent = targetLetter;
+    lb.style.fontSize = 'clamp(80px,20vw,160px)'; lb.textContent = targetLetter;
     lh.innerHTML = `ENCONTRE O ANIMAL QUE COMECA COM <strong>${targetLetter}</strong>`;
     mt.textContent = `🔤 LETRA ${targetLetter}`;
-
-    let allAnimals = level.letras.map(l => ({ letter: l, data: ALFABETO[l] })).filter(x => x.data);
-    let correct = allAnimals.find(a => a.letter === targetLetter);
-    let wrongPool = allAnimals.filter(a => a.letter !== targetLetter).sort(()=>Math.random()-.5).slice(0,2);
+    let allAnimals = level.letras.map(l => ({letter:l, data:ALFABETO[l]})).filter(x=>x.data);
+    let correct = allAnimals.find(a=>a.letter===targetLetter);
+    let wrongPool = allAnimals.filter(a=>a.letter!==targetLetter).sort(()=>Math.random()-.5).slice(0,2);
     const options = [correct, ...wrongPool].sort(()=>Math.random()-.5);
     container.className = 'game-cards';
-
     options.forEach(opt=>{
-      const card = document.createElement('div');
-      card.className = 'animal-card';
-      card.dataset.id = opt.letter;
+      const card = document.createElement('div'); card.className = 'animal-card'; card.dataset.id = opt.letter;
       card.innerHTML = `<span class="animal-emoji">${opt.data.emoji}</span><span class="animal-name">${opt.data.nome}</span>`;
-      card.addEventListener('click', ()=>handleAnimalClick(card, opt.letter));
-      container.appendChild(card);
+      card.addEventListener('click', ()=>handleAnimalClick(card, opt.letter)); container.appendChild(card);
     });
-
     speak(`QUAL ANIMAL COMECA COM A LETRA ${targetLetter}?`);
   }
 
@@ -946,128 +982,270 @@ function nextRound(){
   document.getElementById('progressFill').style.width = ((state.gameCorrect / state.gameRoundsNeeded) * 100) + '%';
 }
 
+// ============================================================
+//  CLICK HANDLERS
+// ============================================================
 function handleAnimalClick(card, letter){
   if(card.classList.contains('disabled')) return;
   const cards = document.querySelectorAll('.animal-card');
   cards.forEach(c=>c.classList.add('disabled'));
-
   if(letter === state.gameTarget){
-    card.classList.add('correct');
-    state.gameCorrect++;
-    triggerCelebration();
-    const data = ALFABETO[letter];
-    speak(data ? data.frase : 'ISSO AI!');
+    card.classList.add('correct'); state.gameCorrect++; triggerCelebration();
+    const data = ALFABETO[letter]; speak(data ? data.frase : 'ISSO AI!');
     setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
   } else {
-    card.classList.add('wrong');
-    speak('TENTE DE NOVO!');
+    card.classList.add('wrong'); speak('TENTE DE NOVO!');
     setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
   }
 }
-
 function handleLetterClick(card, letter){
   if(card.classList.contains('disabled')) return;
   const cards = document.querySelectorAll('.letter-card');
   cards.forEach(c=>c.classList.add('disabled'));
-
   if(letter === state.gameTarget){
-    card.classList.add('correct');
-    state.gameCorrect++;
-    triggerCelebration();
-    const data = ALFABETO[letter];
-    speak(data ? `ISSO! ${letter} DE ${data.nome}!` : `ISSO! A LETRA ${letter}!`);
+    card.classList.add('correct'); state.gameCorrect++; triggerCelebration();
+    const data = ALFABETO[letter]; speak(data ? `ISSO! ${letter} DE ${data.nome}!` : `ISSO! A LETRA ${letter}!`);
     setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
   } else {
-    card.classList.add('wrong');
-    speak('TENTE DE NOVO!');
+    card.classList.add('wrong'); speak('TENTE DE NOVO!');
     setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
   }
 }
-
-// --- NÍVEL 4: LER PALAVRA ---
 function handleWordClick(card, word){
   if(card.classList.contains('disabled')) return;
   const cards = document.querySelectorAll('.animal-card');
   cards.forEach(c=>c.classList.add('disabled'));
-
-  if(word === state.gameTarget){
-    card.classList.add('correct');
-    state.gameCorrect++;
-    triggerCelebration();
-    speak(`ISSO! ${word}!`);
-    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
-  } else {
-    card.classList.add('wrong');
-    speak('TENTE DE NOVO!');
-    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
-  }
+  if(word === state.gameTarget){ card.classList.add('correct'); state.gameCorrect++; triggerCelebration(); speak(`ISSO! ${word}!`); setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800); }
+  else { card.classList.add('wrong'); speak('TENTE DE NOVO!'); setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000); }
 }
-
-// --- NÍVEL 5: COMPLETAR ---
 function handleCompleteClick(card, letter, expected){
   if(card.classList.contains('disabled')) return;
   const cards = document.querySelectorAll('.letter-card');
   cards.forEach(c=>c.classList.add('disabled'));
-
-  if(letter === expected){
-    card.classList.add('correct');
-    state.gameCorrect++;
-    triggerCelebration();
-    speak(`ISSO! A LETRA ${letter}!`);
-    setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
-  } else {
-    card.classList.add('wrong');
-    speak('TENTE DE NOVO!');
-    setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
-  }
+  if(letter === expected){ card.classList.add('correct'); state.gameCorrect++; triggerCelebration(); speak(`ISSO! A LETRA ${letter}!`); setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800); }
+  else { card.classList.add('wrong'); speak('TENTE DE NOVO!'); setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000); }
 }
-
-// --- NÍVEL 6: QUAL E? ---
 function handlePickClick(card, word){
   if(card.classList.contains('disabled')) return;
   const cards = document.querySelectorAll('.letter-card');
   cards.forEach(c=>c.classList.add('disabled'));
-
-  if(word === state.gameTarget){
-    card.classList.add('correct');
-    state.gameCorrect++;
-    triggerCelebration();
-    speak(`ISSO! ${word}!`);
+  if(word === state.gameTarget){ card.classList.add('correct'); state.gameCorrect++; triggerCelebration(); speak(`ISSO! ${word}!`); setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800); }
+  else { card.classList.add('wrong'); speak('TENTE DE NOVO!'); setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000); }
+}
+function handleBabyClick(card, item){
+  if(card.classList.contains('disabled')) return;
+  const cards = document.querySelectorAll('.animal-card');
+  cards.forEach(c=>c.classList.add('disabled'));
+  if(item === state.gameTarget){
+    card.classList.add('correct'); state.gameCorrect++; triggerCelebration();
+    speak('ISSO! MAMAE CUIDOU DO BEBE!');
     setTimeout(()=>{ cards.forEach(c=>c.classList.remove('disabled','correct','wrong')); nextRound(); },1800);
   } else {
-    card.classList.add('wrong');
-    speak('TENTE DE NOVO!');
+    card.classList.add('wrong'); speak('TENTE DE NOVO!');
     setTimeout(()=>{ card.classList.remove('wrong','disabled'); cards.forEach(c=>c.classList.remove('disabled')); },1000);
   }
 }
 
+// ============================================================
+//  WHACK-A-MOLE (NÍVEL 8)
+// ============================================================
+let whackInterval = null;
+let whackTimeout = null;
+let whackScore = 0;
+let whackTimer = 0;
+
+function startWhackGame(){
+  const modal = document.getElementById('whackModal');
+  modal.classList.add('open');
+
+  whackScore = 0;
+  whackTimer = 30;
+  state.gameCorrect = 0;
+  state.gameRoundsNeeded = 10;
+
+  document.getElementById('whackScore').textContent = '🔨 0';
+  document.getElementById('whackTimer').textContent = '⏱️ 30';
+  document.getElementById('whackTitle').textContent = '🐰 BATE MARTELO!';
+  document.getElementById('whackRestart').style.display = 'none';
+
+  // Reset holes
+  for(let i=0;i<4;i++){
+    const el = document.getElementById('whackAnimal'+i);
+    el.className = 'whack-animal';
+    el.textContent = '';
+  }
+
+  document.querySelector('.whack-grid').classList.add('whack-hammer');
+
+  // Start timer
+  whackInterval = setInterval(()=>{
+    whackTimer--;
+    document.getElementById('whackTimer').textContent = '⏱️ '+whackTimer;
+    if(whackTimer <= 0) endWhackGame();
+  }, 1000);
+
+  // Start moles
+  scheduleMole();
+}
+
+function scheduleMole(){
+  if(whackTimer <= 0) return;
+  const delay = 600 + Math.random() * 1000;
+  whackTimeout = setTimeout(()=>{
+    if(whackTimer <= 0) return;
+    showMole();
+  }, delay);
+}
+
+function showMole(){
+  if(whackTimer <= 0) return;
+
+  // Hide any active moles
+  for(let i=0;i<4;i++){
+    const el = document.getElementById('whackAnimal'+i);
+    el.className = 'whack-animal';
+    el.textContent = '';
+  }
+
+  // Pick a random hole
+  const hole = Math.floor(Math.random() * 4);
+  const el = document.getElementById('whackAnimal'+hole);
+
+  // 70% rabbit, 30% other funny animals
+  const animals = ['🐰','🐰','🐰','🐰','🐰','🐰','🐰','🐱','🐶','🐸'];
+  const animal = animals[Math.floor(Math.random()*animals.length)];
+
+  el.textContent = animal;
+  el.className = 'whack-animal active';
+  el.dataset.hole = hole;
+
+  // Auto-hide after 800-1200ms
+  const hideDelay = 600 + Math.random() * 600;
+  setTimeout(()=>{
+    if(el.classList.contains('hit')) return;
+    el.className = 'whack-animal';
+    el.textContent = '';
+    scheduleMole();
+  }, hideDelay);
+
+  // Click handler
+  el.onclick = (e)=>{
+    e.stopPropagation();
+    if(el.classList.contains('hit') || !el.classList.contains('active')) return;
+    el.classList.remove('active');
+    el.classList.add('hit');
+    whackScore++;
+    state.gameCorrect++;
+    document.getElementById('whackScore').textContent = '🔨 '+whackScore;
+
+    // Celebration particles
+    createWhackParticles(e);
+
+    if(whackScore >= 10){
+      endWhackGame(true);
+    } else {
+      scheduleMole();
+    }
+  };
+}
+
+function createWhackParticles(e){
+  const overlay = document.getElementById('celebrationOverlay');
+  overlay.classList.add('active');
+  const emojis = ['⭐','💥','✨','🌟'];
+  for(let i=0;i<6;i++){
+    const el = document.createElement('div');
+    el.className = 'star-burst';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = (30+Math.random()*40)+'%';
+    el.style.top = (30+Math.random()*40)+'%';
+    el.style.animationDuration = (.5+Math.random()*.5)+'s';
+    overlay.appendChild(el);
+  }
+  setTimeout(()=>{ overlay.classList.remove('active'); overlay.innerHTML=''; }, 1000);
+}
+
+function endWhackGame(won){
+  clearInterval(whackInterval);
+  clearTimeout(whackTimeout);
+
+  for(let i=0;i<4;i++){
+    const el = document.getElementById('whackAnimal'+i);
+    el.className = 'whack-animal';
+    el.textContent = '';
+    el.onclick = null;
+  }
+
+  document.querySelector('.whack-grid').classList.remove('whack-hammer');
+
+  if(won){
+    document.getElementById('whackTitle').textContent = '🎉 PARABENS! 10 PONTOS!';
+    document.getElementById('whackRestart').style.display = 'inline-block';
+    triggerCelebration();
+
+    // Complete the level
+    state.gameActive = false;
+    const levelId = 8;
+    if(!state.levelsCompleted.includes(levelId)) state.levelsCompleted.push(levelId);
+    if(state.levelUnlocked <= levelId && levelId < 8) state.levelUnlocked = levelId + 1;
+    saveProgress();
+    updateMap();
+    setTimeout(()=>showTreasure('🐰'), 600);
+  } else {
+    document.getElementById('whackTitle').textContent = '⏱️ ACABOU O TEMPO! TENTE DE NOVO!';
+    document.getElementById('whackRestart').style.display = 'inline-block';
+  }
+}
+
+document.getElementById('whackRestart').addEventListener('click', ()=>{
+  document.getElementById('whackModal').classList.remove('open');
+  setTimeout(()=>startWhackGame(), 300);
+});
+
+document.getElementById('whackClose').addEventListener('click', ()=>{
+  clearInterval(whackInterval); clearTimeout(whackTimeout);
+  document.getElementById('whackModal').classList.remove('open');
+  state.gameActive = false;
+});
+
+// ============================================================
+//  FINISH LEVEL
+// ============================================================
 function finishLevel(){
   const modal = document.getElementById('gameModal');
   modal.classList.remove('open');
   state.gameActive = false;
 
   const levelId = state.currentLevel;
-  if(!state.levelsCompleted.includes(levelId)){
-    state.levelsCompleted.push(levelId);
-  }
-  if(levelId < 6 && state.levelUnlocked <= levelId){
-    state.levelUnlocked = levelId + 1;
-  }
+  if(!state.levelsCompleted.includes(levelId)) state.levelsCompleted.push(levelId);
+  if(levelId < 8 && state.levelUnlocked <= levelId) state.levelUnlocked = levelId + 1;
   saveProgress();
   updateMap();
 
   const lastLetter = state.gameUsedLetters && state.gameUsedLetters.length > 0
-    ? state.gameUsedLetters[state.gameUsedLetters.length - 1]
-    : 'A';
+    ? state.gameUsedLetters[state.gameUsedLetters.length - 1] : 'A';
   setTimeout(()=>showTreasure(lastLetter), 400);
 }
 
-document.getElementById('level1Btn').addEventListener('click', ()=>startLevel(1));
-document.getElementById('level2Btn').addEventListener('click', ()=>startLevel(2));
-document.getElementById('level3Btn').addEventListener('click', ()=>startLevel(3));
-document.getElementById('level4Btn').addEventListener('click', ()=>startLevel(4));
-document.getElementById('level5Btn').addEventListener('click', ()=>startLevel(5));
-document.getElementById('level6Btn').addEventListener('click', ()=>startLevel(6));
+// ============================================================
+//  EVENT LISTENERS
+// ============================================================
+[1,2,3,4,5,6,7,8].forEach(l=>{
+  const btn = document.getElementById('level'+l+'Btn');
+  if(btn) btn.addEventListener('click', ()=>startLevel(l));
+});
+
+document.getElementById('modalClose').addEventListener('click',()=>{
+  document.getElementById('gameModal').classList.remove('open');
+  state.gameActive = false;
+});
+
+document.getElementById('gameModal').addEventListener('click',(e)=>{
+  if(e.target === e.currentTarget){
+    document.getElementById('gameModal').classList.remove('open');
+    state.gameActive = false;
+  }
+});
 
 document.getElementById('modalClose').addEventListener('click',()=>{
   document.getElementById('gameModal').classList.remove('open');
