@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jogo da Sara - Letras</title>
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Segoe UI','Comic Sans MS',cursive,sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#d4a574;border-radius:10px}
+
+/* ===== SIDEBAR ===== */
+.sidebar{width:90px;min-width:90px;height:100%;background:linear-gradient(180deg,#ff9a56 0%,#ff6f3c 100%);display:flex;flex-direction:column;align-items:center;padding:16px 8px;gap:12px;box-shadow:4px 0 20px rgba(0,0,0,.12);z-index:10;position:relative}
+.sidebar-btn{width:64px;height:64px;border-radius:20px;border:3px solid rgba(255,255,255,.5);background:rgba(255,255,255,.25);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:all .15s;position:relative;color:#fff}
+.sidebar-btn:active{transform:scale(.88);background:rgba(255,255,255,.45)}
+.sidebar-btn.active{background:#fff;border-color:#fff;color:#ff6f3c;box-shadow:0 4px 15px rgba(0,0,0,.15)}
+.sidebar-btn .icon{font-size:28px;line-height:1}
+.sidebar-btn .label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sidebar-btn.active .label{color:#ff6f3c}
+
+/* ===== MAIN CONTENT ===== */
+.main{flex:1;height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 24px;display:flex;flex-direction:column;position:relative;text-transform:uppercase}
+.main .animal-emoji,.main .letter-emoji,.main .letter-big,.main .big-icon,.main .hint-emoji,.main .map-circle,.main .icon{text-transform:none}
+.main .sidebar-btn .label{text-transform:uppercase}
+.main small{font-size:0.8em}
+.page{display:none;flex-direction:column;height:100%}
+.page.active{display:flex}
+
+/* ===== PAGE: LEARN ===== */
+.learn-header{margin-bottom:12px;display:flex;align-items:center;gap:12px}
+.learn-header h1{font-size:clamp(22px,4vw,36px);color:#5a3e2b;text-shadow:2px 2px 0 rgba(255,200,100,.3)}
+.learn-header .level-badge{background:linear-gradient(135deg,#ffd700,#ffaa00);color:#5a3e2b;padding:4px 16px;border-radius:30px;font-weight:700;font-size:clamp(12px,2vw,16px);box-shadow:0 2px 8px rgba(255,170,0,.4)}
+
+/* ===== MAPA ===== */
+.map-container{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0}
+.map{display:flex;align-items:center;gap:clamp(8px,2vw,30px);flex-wrap:nowrap;justify-content:center}
+.map-step{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.map-circle{width:clamp(90px,18vw,160px);height:clamp(90px,18vw,160px);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(40px,8vw,70px);cursor:pointer;transition:all .2s;position:relative;border:4px solid transparent}
+.map-circle:active{transform:scale(.9)}
+.map-circle.step-1{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-color:#66bb6a;box-shadow:0 6px 25px rgba(102,187,106,.35)}
+.map-circle.step-1:hover{box-shadow:0 8px 35px rgba(102,187,106,.5);transform:translateY(-3px)}
+.map-circle.step-2{background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-color:#ffb74d;box-shadow:0 6px 25px rgba(255,183,77,.35);animation:treasureGlow 2s ease-in-out infinite}
+.map-circle.step-3{background:linear-gradient(135deg,#e0e0e0,#bdbdbd);border-color:#9e9e9e;opacity:.6;cursor:not-allowed}
+.map-step-label{font-size:clamp(11px,1.5vw,16px);font-weight:700;color:#5a3e2b;text-align:center;max-width:120px}
+.map-connector{font-size:clamp(20px,4vw,36px);color:#d4a574;flex-shrink:0}
+.lock-icon{position:absolute;font-size:clamp(22px,4vw,36px);bottom:-5px;right:-5px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+.completed-badge{position:absolute;top:-8px;right:-8px;font-size:clamp(18px,3vw,28px);filter:drop-shadow(0 2px 6px rgba(255,215,0,.6));animation:badgePop .5s}
+@keyframes treasureGlow{0%,100%{box-shadow:0 6px 25px rgba(255,183,77,.35)}50%{box-shadow:0 6px 40px rgba(255,183,77,.7),0 0 60px rgba(255,183,77,.3)}}
+@keyframes badgePop{0%{transform:scale(0)}60%{transform:scale(1.4)}100%{transform:scale(1)}}
+
+/* ===== MODAL FULLSCREEN ===== */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal-content{background:linear-gradient(180deg,#fff8e7,#ffedd5);border-radius:30px;padding:clamp(16px,3vw,32px);width:min(95vw,700px);max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modalIn .3s ease-out;border:4px solid #ffb74d}
+@keyframes modalIn{0%{transform:scale(.7)translateY(40px);opacity:0}100%{transform:scale(1)translateY(0);opacity:1}}
+.modal-close{position:absolute;top:12px;right:16px;font-size:36px;background:none;border:none;cursor:pointer;color:#999;transition:color .2s;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.modal-close:hover{color:#555;background:rgba(0,0,0,.05)}
+.modal-title{text-align:center;font-size:clamp(20px,4vw,32px);color:#5a3e2b;margin-bottom:20px;padding-right:40px}
+
+/* ===== GAME CARDS ===== */
+.game-cards{display:flex;gap:clamp(10px,3vw,20px);justify-content:center;flex-wrap:wrap;margin:10px 0}
+.animal-card{width:clamp(120px,25vw,200px);height:clamp(120px,25vw,200px);border-radius:24px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(0,0,0,.1);border:4px solid #e8d5c4;gap:8px;padding:12px}
+.animal-card:active{transform:scale(.92)}
+.animal-card .animal-emoji{font-size:clamp(48px,10vw,80px)}
+.animal-card .animal-name{font-size:clamp(14px,2.5vw,20px);font-weight:700;color:#5a3e2b}
+.animal-card.correct{animation:cardCorrect .5s;border-color:#66bb6a;background:#e8f5e9}
+.animal-card.wrong{animation:cardWrong .5s;border-color:#ef5350;background:#ffebee}
+.animal-card.disabled{pointer-events:none;opacity:.6}
+@keyframes cardCorrect{0%,100%{transform:scale(1)}30%{transform:scale(1.1)}60%{transform:scale(.95)}}
+@keyframes cardWrong{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+.progress-bar{width:100%;height:12px;background:#e0d5c4;border-radius:20px;overflow:hidden;margin:12px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,#66bb6a,#43a047);border-radius:20px;transition:width .4s ease;width:0%}
+.progress-text{text-align:center;font-size:clamp(14px,2vw,18px);color:#5a3e2b;font-weight:600;margin-bottom:4px}
+
+/* ===== LETTER DISPLAY ===== */
+.letter-display{text-align:center;margin:8px 0 16px}
+.letter-big{font-size:clamp(80px,20vw,160px);font-weight:900;color:#5a3e2b;text-shadow:4px 4px 0 rgba(255,200,100,.4),8px 8px 0 rgba(255,200,100,.2);line-height:1;font-family:'Arial Black','Impact',sans-serif;letter-spacing:4px}
+.letter-hint{font-size:clamp(16px,3vw,22px);color:#8a7a6a;margin-top:4px}
+.letter-hint .hint-emoji{font-size:clamp(24px,4vw,36px)}
+
+/* ===== LETTER CARDS ===== */
+.letter-card{width:clamp(80px,18vw,140px);height:clamp(80px,18vw,140px);border-radius:24px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(0,0,0,.1);border:4px solid #e8d5c4;gap:4px;padding:8px}
+.letter-card:active{transform:scale(.92)}
+.letter-card .letter-char{font-size:clamp(36px,8vw,60px);font-weight:900;font-family:'Arial Black','Impact',sans-serif;color:#5a3e2b;line-height:1}
+.letter-card .letter-emoji{font-size:clamp(24px,5vw,40px)}
+.letter-card .letter-label{font-size:clamp(11px,1.8vw,15px);font-weight:600;color:#8a7a6a}
+.letter-card.correct{animation:cardCorrect .5s;border-color:#66bb6a;background:#e8f5e9}
+.letter-card.wrong{animation:cardWrong .5s;border-color:#ef5350;background:#ffebee}
+.letter-card.disabled{pointer-events:none;opacity:.6}
+
+/* ===== TRACING ===== */
+.tracing-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.tracing-letter-btn{width:clamp(40px,8vw,60px);height:clamp(40px,8vw,60px);border-radius:14px;border:3px solid #e0d5c4;background:#fff;font-size:clamp(20px,4vw,32px);font-weight:900;font-family:'Arial Black','Impact',sans-serif;color:#5a3e2b;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.tracing-letter-btn:active{transform:scale(.85)}
+.tracing-letter-btn.active{border-color:#ff6f3c;background:#fff3e0;box-shadow:0 0 0 3px rgba(255,111,60,.2)}
+.tracing-mode-btn{padding:6px 16px;border-radius:20px;border:3px solid #e0d5c4;background:#fff;font-size:clamp(12px,1.8vw,15px);font-weight:700;color:#5a3e2b;cursor:pointer;transition:all .15s}
+.tracing-mode-btn:active{transform:scale(.9)}
+.tracing-mode-btn.active{border-color:#66bb6a;background:#e8f5e9}
+
+/* ===== CELEBRATION ===== */
+.celebration-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;pointer-events:none}
+.celebration-overlay.active{display:block}
+.confetti{position:absolute;width:12px;height:12px;border-radius:2px;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(-20px)rotate(0deg);opacity:1}100%{transform:translateY(100vh)rotate(720deg);opacity:0}}
+.star-burst{position:absolute;font-size:30px;animation:starBurst 1s ease-out forwards}
+@keyframes starBurst{0%{transform:scale(0)rotate(0deg);opacity:1}100%{transform:scale(2)rotate(180deg);opacity:0}}
+
+/* ===== TREASURE CHEST ===== */
+.treasure-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1500;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(6px)}
+.treasure-overlay.open{display:flex}
+.treasure-box{text-align:center;animation:treasureIn .6s cubic-bezier(.68,-.55,.27,1.55)}
+@keyframes treasureIn{0%{transform:scale(0)rotate(-10deg)}100%{transform:scale(1)rotate(0deg)}}
+.treasure-emoji{font-size:clamp(80px,20vw,150px);display:block;margin-bottom:10px;animation:treasureBounce 1s ease-in-out infinite,crateShine 2s ease-in-out infinite}
+@keyframes treasureBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+@keyframes crateShine{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+.treasure-title{font-size:clamp(28px,6vw,48px);color:#ffd700;text-shadow:3px 3px 0 rgba(0,0,0,.3);margin:10px 0}
+.treasure-sub{font-size:clamp(16px,3vw,24px);color:#fff;margin-bottom:16px}
+.sticker-gold{display:inline-block;background:linear-gradient(135deg,#ffd700,#ffaa00);border-radius:20px;padding:12px 24px;font-size:clamp(32px,6vw,56px);box-shadow:0 4px 20px rgba(255,170,0,.5);margin:10px 0;animation:stickerPop .6s cubic-bezier(.68,-.55,.27,1.55)}
+@keyframes stickerPop{0%{transform:scale(0)rotate(-20deg)}100%{transform:scale(1)rotate(0deg)}}
+.treasure-btn{background:linear-gradient(135deg,#ffd700,#ffaa00);border:none;padding:14px 40px;border-radius:50px;font-size:clamp(16px,3vw,22px);font-weight:700;color:#5a3e2b;cursor:pointer;box-shadow:0 4px 15px rgba(255,170,0,.4);transition:all .2s;margin-top:12px}
+.treasure-btn:active{transform:scale(.9)}
+
+/* ===== STICKER ALBUM ===== */
+.album-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:12px;padding:10px 0}
+.sticker-slot{aspect-ratio:1;border-radius:16px;border:3px dashed #d4a574;display:flex;align-items:center;justify-content:center;font-size:clamp(30px,5vw,50px);background:rgba(255,255,255,.5);transition:all .2s}
+.sticker-slot.filled{border:3px solid #ffd700;background:linear-gradient(135deg,#fff8e1,#fff3cd);box-shadow:0 4px 15px rgba(255,215,0,.3);animation:slotFill .4s}
+@keyframes slotFill{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.album-empty{text-align:center;padding:40px 20px;color:#a08060;font-size:clamp(16px,3vw,22px)}
+.album-empty .big-icon{font-size:clamp(50px,10vw,80px);display:block;margin-bottom:12px}
+
+/* ===== PLAYGROUND ===== */
+.playground-container{flex:1;display:flex;flex-direction:column;gap:12px;padding:4px 0}
+.canvas-wrapper{flex:1;background:#fff;border-radius:24px;box-shadow:0 6px 25px rgba(0,0,0,.08);overflow:hidden;border:4px solid #e0d5c4;position:relative;min-height:200px}
+.canvas-wrapper canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.tools-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.color-btn{width:clamp(36px,6vw,50px);height:clamp(36px,6vw,50px);border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s;flex-shrink:0}
+.color-btn:active{transform:scale(.85)}
+.color-btn.active{border-color:#5a3e2b;box-shadow:0 0 0 3px rgba(90,62,43,.2)}
+.clear-btn,.play-sound-btn{background:#ff8a65;border:none;padding:8px 18px;border-radius:30px;font-size:clamp(13px,2vw,16px);font-weight:700;color:#fff;cursor:pointer;transition:all .15s;box-shadow:0 3px 10px rgba(255,138,101,.3)}
+.clear-btn:active,.play-sound-btn:active{transform:scale(.9)}
+.play-sound-btn{background:#66bb6a;box-shadow:0 3px 10px rgba(102,187,106,.3)}
+
+/* ===== COLLECTION PAGE ===== */
+.collection-header{margin-bottom:12px}
+.collection-header h1{font-size:clamp(22px,4vw,36px);color:#5a3e2b;text-shadow:2px 2px 0 rgba(255,200,100,.3)}
+.collection-sub{font-size:clamp(13px,2vw,17px);color:#8a7a6a;margin-top:4px}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+.sidebar{width:70px;min-width:70px;padding:12px 6px;gap:8px}
+.sidebar-btn{width:52px;height:52px;border-radius:16px}
+.sidebar-btn .icon{font-size:22px}
+.sidebar-btn .label{font-size:8px}
+.main{padding:12px}
+.map{flex-direction:column;gap:6px}
+.map-connector{transform:rotate(90deg);font-size:20px}
+.map-circle{width:clamp(70px,25vw,100px);height:clamp(70px,25vw,100px);font-size:clamp(30px,10vw,45px)}
+.animal-card{width:clamp(100px,28vw,150px);height:clamp(100px,28vw,150px)}
+.album-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+}
+@media(max-width:400px){
+.sidebar{width:56px;min-width:56px;padding:8px 4px;gap:6px}
+.sidebar-btn{width:44px;height:44px;border-radius:12px}
+.sidebar-btn .icon{font-size:18px}
+.sidebar-btn .label{font-size:7px}
+.main{padding:8px}
+.animal-card{width:clamp(80px,35vw,120px);height:clamp(80px,35vw,120px)}
+.animal-card .animal-emoji{font-size:clamp(32px,12vw,50px)}
+}
+@media(min-width:1024px){
+.map{flex-direction:row}
+.map-connector{transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <button class="sidebar-btn active" data-page="learn" aria-label="Aprender">
+    <span class="icon">⭐</span>
+    <span class="label">APRENDER</span>
+  </button>
+  <button class="sidebar-btn" data-page="playground" aria-label="Playground">
+    <span class="icon">✏️</span>
+    <span class="label">PLAYGROUND</span>
+  </button>
+  <button class="sidebar-btn" data-page="collection" aria-label="Coleção">
+    <span class="icon">📒</span>
+    <span class="label">COLECAO</span>
+  </button>
+</nav>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+
+  <!-- PAGE: LEARN -->
+  <section class="page active" id="page-learn">
+    <div class="learn-header">
+      <h1>🔤 APRENDER LETRAS</h1>
+      <span class="level-badge" id="levelBadge">Nível 1</span>
+    </div>
+    <div class="map-container">
+      <div class="map" id="gameMap">
+        <!-- Nível 1: Vogais -->
+        <div class="map-step">
+          <div class="map-circle step-1" id="level1Btn" data-level="1">
+            🅰️
+          </div>
+          <span class="map-step-label">VOGAIS<br><small>A, E, I, O, U</small></span>
+        </div>
+        <span class="map-connector">➡️</span>
+        <!-- Nível 2: Consoantes -->
+        <div class="map-step">
+          <div class="map-circle step-2" id="level2Btn" data-level="2">
+            🔤
+          </div>
+          <span class="map-step-label">CONSOANTES<br><small>B, C, D, F, G...</small></span>
+        </div>
+        <span class="map-connector">➡️</span>
+        <!-- Nível 3: Escrever -->
+        <div class="map-step">
+          <div class="map-circle step-3" id="level3Btn" data-level="3">
+            ✏️
+            <span class="lock-icon">🔒</span>
+          </div>
+          <span class="map-step-label">ESCREVER LETRAS<br><small>PRATIQUE NO QUADRO</small></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: PLAYGROUND -->
+  <section class="page" id="page-playground">
+    <div class="learn-header">
+      <h1>✏️ PLAYGROUND</h1>
+    </div>
+    <div class="playground-container">
+      <div class="canvas-wrapper">
+        <canvas id="drawCanvas"></canvas>
+      </div>
+      <div class="tools-bar">
+        <button class="color-btn active" data-color="#e53935" style="background:#e53935" aria-label="Vermelho"></button>
+        <button class="color-btn" data-color="#1e88e5" style="background:#1e88e5" aria-label="Azul"></button>
+        <button class="color-btn" data-color="#fdd835" style="background:#fdd835" aria-label="Amarelo"></button>
+        <button class="color-btn" data-color="#43a047" style="background:#43a047" aria-label="Verde"></button>
+        <button class="color-btn" data-color="#8e24aa" style="background:#8e24aa" aria-label="Roxo"></button>
+        <button class="color-btn" data-color="#ff6f00" style="background:#ff6f00" aria-label="Laranja"></button>
+        <button class="clear-btn">🧹 LIMPAR</button>
+        <button class="play-sound-btn" id="tracingToggleBtn">🔤 TREINAR LETRAS</button>
+      </div>
+      <div class="tracing-controls" id="tracingControls" style="display:none">
+        <button class="tracing-letter-btn" data-letter="A">A</button>
+        <button class="tracing-letter-btn" data-letter="B">B</button>
+        <button class="tracing-letter-btn" data-letter="C">C</button>
+        <button class="tracing-letter-btn" data-letter="D">D</button>
+        <button class="tracing-letter-btn" data-letter="E">E</button>
+        <button class="tracing-letter-btn" data-letter="F">F</button>
+        <button class="tracing-letter-btn" data-letter="G">G</button>
+        <button class="tracing-letter-btn" data-letter="I">I</button>
+        <button class="tracing-letter-btn" data-letter="L">L</button>
+        <button class="tracing-letter-btn" data-letter="M">M</button>
+        <button class="tracing-letter-btn" data-letter="O">O</button>
+        <button class="tracing-letter-btn" data-letter="P">P</button>
+        <button class="tracing-letter-btn" data-letter="S">S</button>
+        <button class="tracing-letter-btn" data-letter="T">T</button>
+        <button class="tracing-letter-btn" data-letter="U">U</button>
+        <button class="tracing-letter-btn" data-letter="V">V</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: COLLECTION -->
+  <section class="page" id="page-collection">
+    <div class="collection-header">
+      <h1>📒 MINHA COLECAO</h1>
+      <div class="collection-sub">SUAS FIGURINHAS ✨</div>
+    </div>
+    <div class="album-grid" id="albumGrid"></div>
+  </section>
+
+</main>
+
+<!-- ===== GAME MODAL ===== -->
+<div class="modal-overlay" id="gameModal">
+  <div class="modal-content">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-title" id="modalTitle">� Qual é a letra?</div>
+    <div class="letter-display" id="letterDisplay">
+      <div class="letter-big" id="letterBig">A</div>
+      <div class="letter-hint" id="letterHint">Encontre o animal que começa com <strong>A</strong></div>
+    </div>
+    <div class="progress-text" id="progressText">Acertos: 0 / 3</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="game-cards" id="gameCards"></div>
+  </div>
+</div>
+
+<!-- ===== TREASURE OVERLAY ===== -->
+<div class="treasure-overlay" id="treasureOverlay">
+  <div class="treasure-box">
+    <span class="treasure-emoji">🎁</span>
+    <div class="treasure-title">🎉 PARABENS!</div>
+    <div class="treasure-sub">VOCE GANHOU UMA FIGURINHA!</div>
+    <div class="sticker-gold" id="stickerReward">🐼</div>
+    <br>
+    <button class="treasure-btn" id="treasureBtn">📒 VER COLECAO</button>
+  </div>
+</div>
+
+<!-- ===== CELEBRATION CONTAINER ===== -->
+<div class="celebration-overlay" id="celebrationOverlay"></div>
+
+<script>
+// ============================================================
+//  CONFIG - ALFABETO ILUSTRADO
+// ============================================================
+const ALFABETO = {
+  'A': { emoji:'🦅', nome:'AGUIA',   frase:'A de AGUIA!' },
+  'B': { emoji:'🦋', nome:'BORBOLETA',frase:'B de BORBOLETA!' },
+  'C': { emoji:'🐕', nome:'CACHORRO',frase:'C de CACHORRO!' },
+  'D': { emoji:'🐬', nome:'GOLFINHO',frase:'D de GOLFINHO!' },
+  'E': { emoji:'🐘', nome:'ELEFANTE',frase:'E de ELEFANTE!' },
+  'F': { emoji:'🦩', nome:'FLAMINGO',frase:'F de FLAMINGO!' },
+  'G': { emoji:'🐱', nome:'GATO',    frase:'G de GATO!' },
+  'I': { emoji:'🦎', nome:'IGUANA',  frase:'I de IGUANA!' },
+  'J': { emoji:'🐊', nome:'JACARE',  frase:'J de JACARE!' },
+  'L': { emoji:'🦁', nome:'LEAO',    frase:'L DE LEAO!' },
+  'M': { emoji:'🐒', nome:'MACACO',  frase:'M DE MACACO!' },
+  'O': { emoji:'🐑', nome:'OVELHA',  frase:'O DE OVELHA!' },
+  'P': { emoji:'🐧', nome:'PINGUIM', frase:'P DE PINGUIM!' },
+  'S': { emoji:'🐸', nome:'SAPO',    frase:'S DE SAPO!' },
+  'T': { emoji:'🐯', nome:'TIGRE',   frase:'T DE TIGRE!' },
+  'U': { emoji:'🐻', nome:'URSO',    frase:'U DE URSO!' },
+  'V': { emoji:'🐄', nome:'VACA',    frase:'V DE VACA!' },
+};
+
+const LEVELS = [
+  { id: 1, nome:'VOGAIS',    icon:'🅰️', letras:['A','E','I','O','U'],              rounds:3 },
+  { id: 2, nome:'CONSOANTES',icon:'🔤', letras:['B','C','D','F','G','L','M','P','S','T','V'], rounds:3 },
+  { id: 3, nome:'ESCREVER',  icon:'✏️', letras:['A','E','I','O','U','B','C','D','F','G','L','M','P','S','T','V'], rounds:1, type:'tracing' },
+];
+
+// ============================================================
+//  STATE
+// ============================================================
+let state = {
+  currentPage: 'learn',
+  levelsCompleted: [],   // ids dos níveis completados
+  levelUnlocked: 1,      // nível atual desbloqueado
+  currentLevel: 1,       // nível sendo jogado
+  stickers: [],          // letras colecionadas
+  gameActive: false,
+  gameRound: 0,
+  gameCorrect: 0,
+  gameRoundsNeeded: 3,
+  gameTarget: null,
+  gameOptions: [],
+  gameUsedLetters: [],
+  tracingMode: false,
+  tracingLetter: null,
+};
+
+// ============================================================
+//  LOAD / SAVE
+// ============================================================
+function loadProgress(){
+  try{
+    const d = JSON.parse(localStorage.getItem('sara_jogo_letras'));
+    if(d){
+      state.levelsCompleted = Array.isArray(d.levelsCompleted) ? d.levelsCompleted : [];
+      state.levelUnlocked = d.levelUnlocked || 1;
+      state.stickers = Array.isArray(d.stickers) ? d.stickers : [];
+    }
+  }catch(e){}
+}
+function saveProgress(){
+  localStorage.setItem('sara_jogo_letras', JSON.stringify({
+    levelsCompleted: state.levelsCompleted,
+    levelUnlocked: state.levelUnlocked,
+    stickers: state.stickers,
+  }));
+}
+
+// ============================================================
+//  SPEECH
+// ============================================================
+function speak(text, cb){
+  if(!window.speechSynthesis) { if(cb)cb(); return; }
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'pt-BR';
+  utter.rate = 0.85;
+  utter.pitch = 1.2;
+  utter.onend = ()=>{ if(cb)cb(); };
+  utter.onerror = ()=>{ if(cb)cb(); };
+  speechSynthesis.speak(utter);
+}
+
+// ============================================================
+//  CELEBRATION
+// ============================================================
+function triggerCelebration(){
+  const overlay = document.getElementById('celebrationOverlay');
+  overlay.classList.add('active');
+  const colors = ['#e53935','#fdd835','#43a047','#1e88e5','#8e24aa','#ff6f00','#ff4081','#00e676'];
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+
+  for(let i=0;i<80;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random()*w+'px';
+    el.style.top = '-20px';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    const size = 6+Math.random()*10;
+    el.style.width = size+'px';
+    el.style.height = size+'px';
+    el.style.borderRadius = Math.random()>.5?'50%':'2px';
+    el.style.animationDuration = (2+Math.random()*2)+'s';
+    el.style.animationDelay = (Math.random()*1.5)+'s';
+    overlay.appendChild(el);
+  }
+
+  const starEmojis = ['⭐','🌟','✨','💫','🎉','🎊'];
+  for(let i=0;i<30;i++){
+    const el = document.createElement('div');
+    el.className = 'star-burst';
+    el.textContent = starEmojis[Math.floor(Math.random()*starEmojis.length)];
+    el.style.left = (10+Math.random()*80)+'%';
+    el.style.top = (10+Math.random()*80)+'%';
+    el.style.animationDuration = (1+Math.random()*1)+'s';
+    el.style.animationDelay = (Math.random()*1)+'s';
+    overlay.appendChild(el);
+  }
+
+  setTimeout(()=>{
+    overlay.classList.remove('active');
+    overlay.innerHTML='';
+  },3500);
+}
+
+// ============================================================
+//  TREASURE / REWARD
+// ============================================================
+function showTreasure(letter){
+  const data = ALFABETO[letter];
+  const emoji = data ? data.emoji : '⭐';
+  document.getElementById('stickerReward').textContent = emoji;
+
+  if(!state.stickers.includes(letter)){
+    state.stickers.push(letter);
+    saveProgress();
+  }
+
+  document.getElementById('treasureOverlay').classList.add('open');
+  speak(`PARABENS! VOCE GANHOU A FIGURINHA ${data ? data.nome : 'DOURADO'}!`);
+}
+
+function closeTreasure(){
+  document.getElementById('treasureOverlay').classList.remove('open');
+}
+
+document.getElementById('treasureBtn').addEventListener('click',()=>{
+  closeTreasure();
+  switchPage('collection');
+});
+
+// ============================================================
+//  PAGE SWITCHING
+// ============================================================
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelector('.sidebar-btn[data-page="'+name+'"]').classList.add('active');
+  state.currentPage = name;
+
+  if(name==='playground') initCanvas();
+  if(name==='collection') renderAlbum();
+  if(name==='learn') updateMap();
+}
+
+document.querySelectorAll('.sidebar-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>switchPage(btn.dataset.page));
+});
+
+// ============================================================
+//  MAP UPDATE
+// ============================================================
+function updateMap(){
+  const badge = document.getElementById('levelBadge');
+  badge.textContent = `Nível ${state.levelUnlocked}`;
+
+  [1,2,3].forEach(lvl=>{
+    const btn = document.getElementById('level'+lvl+'Btn');
+    const isUnlocked = lvl <= state.levelUnlocked;
+    const isCompleted = state.levelsCompleted.includes(lvl);
+
+    // Update circle class
+    btn.className = 'map-circle';
+    if(isCompleted){
+      btn.classList.add('step-2');
+    } else if(isUnlocked){
+      btn.classList.add(isCompleted ? 'step-2' : 'step-1');
+    } else {
+      btn.classList.add('step-3');
+    }
+
+    // Lock icon
+    let lock = btn.querySelector('.lock-icon');
+    if(!isUnlocked){
+      if(!lock){
+        lock = document.createElement('span');
+        lock.className = 'lock-icon';
+        lock.textContent = '🔒';
+        btn.appendChild(lock);
+      }
+    } else if(lock){
+      lock.remove();
+    }
+
+    // Completed badge
+    let comp = btn.querySelector('.completed-badge');
+    if(isCompleted){
+      if(!comp){
+        comp = document.createElement('span');
+        comp.className = 'completed-badge';
+        comp.textContent = '✅';
+        btn.appendChild(comp);
+      }
+    } else if(comp){
+      comp.remove();
+    }
+  });
+}
+
+// ============================================================
+//  LEVEL GAME
+// ============================================================
+function startLevel(levelId){
+  if(levelId > state.levelUnlocked) return;
+  if(state.gameActive) return;
+
+  const level = LEVELS.find(l=>l.id===levelId);
+  if(!level) return;
+
+  state.currentLevel = levelId;
+  state.gameActive = true;
+  state.gameCorrect = 0;
+  state.gameRound = 0;
+  state.gameRoundsNeeded = level.rounds;
+  state.gameUsedLetters = [];
+
+  const modal = document.getElementById('gameModal');
+  modal.classList.add('open');
+  document.getElementById('progressFill').style.width = '0%';
+  nextRound();
+}
+
+function getRandomLetter(levelId, exclude){
+  const level = LEVELS.find(l=>l.id===levelId);
+  const pool = level.letras.filter(l => !exclude.includes(l));
+  if(pool.length===0){
+    const avail = level.letras.filter(l => !exclude.slice(0,-1).includes(l));
+    return avail.length>0 ? avail[Math.floor(Math.random()*avail.length)] : level.letras[0];
+  }
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function nextRound(){
+  if(state.gameCorrect >= state.gameRoundsNeeded){
+    finishLevel();
+    return;
+  }
+
+  state.gameRound++;
+  const targetLetter = getRandomLetter(state.currentLevel, state.gameUsedLetters);
+  state.gameTarget = targetLetter;
+  state.gameUsedLetters.push(targetLetter);
+
+  const level = LEVELS.find(l=>l.id===state.currentLevel);
+  const targetData = ALFABETO[targetLetter];
+
+  if(state.currentLevel === 3){
+    // Nível 3: mostrar animal, escolher a letra inicial
+    document.getElementById('letterDisplay').style.display = 'block';
+    document.getElementById('letterBig').style.fontSize = 'clamp(50px,12vw,90px)';
+    document.getElementById('letterBig').textContent = targetData.emoji;
+    document.getElementById('letterHint').innerHTML = `QUE LETRA COMECA? <span class="hint-emoji">${targetData.emoji}</span>`;
+    document.getElementById('modalTitle').textContent = '🤔 QUAL E A PRIMEIRA LETRA?';
+
+    // Options: letras (1 certa + 2 erradas do mesmo nível)
+    let distractors = level.letras.filter(l => l !== targetLetter);
+    distractors = distractors.sort(()=>Math.random()-.5).slice(0,2);
+    const options = [targetLetter, ...distractors].sort(()=>Math.random()-.5);
+    state.gameOptions = options;
+
+    const container = document.getElementById('gameCards');
+    container.innerHTML = '';
+    container.className = 'game-cards';
+    options.forEach(letra=>{
+      const d = ALFABETO[letra];
+      const card = document.createElement('div');
+      card.className = 'letter-card';
+      card.dataset.id = letra;
+      card.innerHTML = `<span class="letter-char">${letra}</span><span class="letter-label">${d ? d.nome : ''}</span>`;
+      card.addEventListener('click', ()=>handleLetterClick(card, letra));
+      container.appendChild(card);
+    });
+
+    speak(`QUAL E A PRIMEIRA LETRA DE ${targetData.nome}?`);
+  } else {
+    // Níveis 1 e 2: mostrar letra, escolher o animal
+    document.getElementById('letterDisplay').style.display = 'block';
+    document.getElementById('letterBig').style.fontSize = 'clamp(80px,20vw,160px)';
+    document.getElementById('letterBig').textContent = targetLetter;
+    document.getElementById('letterHint').innerHTML = `ENCONTRE O ANIMAL QUE COMECA COM <strong>${targetLetter}</strong>`;
+    document.getElementById('modalTitle').textContent = `🔤 LETRA ${targetLetter}`;
+
+    // Options: animais que começam com letras do nível
+    let allAnimals = level.letras.map(l => ({ letter: l, data: ALFABETO[l] })).filter(x => x.data);
+    let correct = allAnimals.find(a => a.letter === targetLetter);
+    let wrongPool = allAnimals.filter(a => a.letter !== targetLetter).sort(()=>Math.random()-.5).slice(0,2);
+    const options = [correct, ...wrongPool].sort(()=>Math.random()-.5);
+
+    const container = document.getElementById('gameCards');
+    container.innerHTML = '';
+    container.className = 'game-cards';
+    options.forEach(opt=>{
+      const card = document.createElement('div');
+      card.className = 'animal-card';
+      card.dataset.id = opt.letter;
+      card.innerHTML = `<span class="animal-emoji">${opt.data.emoji}</span><span class="animal-name">${opt.data.nome}</span>`;
+      card.addEventListener('click', ()=>handleAnimalClick(card, opt.letter));
+      container.appendChild(card);
+    });
+
+    speak(`QUAL ANIMAL COMECA COM A LETRA ${targetLetter}?`);
+  }
+
+  document.getElementById('progressText').textContent = `ACERTOS: ${state.gameCorrect} / ${state.gameRoundsNeeded}`;
+  document.getElementById('progressFill').style.width = ((state.gameCorrect / state.gameRoundsNeeded) * 100) + '%';
+}
+
+function handleAnimalClick(card, letter){
+  if(card.classList.contains('disabled')) return;
+  const cards = document.querySelectorAll('.animal-card');
+  cards.forEach(c=>c.classList.add('disabled'));
+
+  if(letter === state.gameTarget){
+    card.classList.add('correct');
+    state.gameCorrect++;
+    triggerCelebration();
+    const data = ALFABETO[letter];
+    speak(data ? data.frase : 'ISSO AI!');
+
+    setTimeout(()=>{
+      cards.forEach(c=>c.classList.remove('disabled','correct','wrong'));
+      nextRound();
+    },1800);
+  } else {
+    card.classList.add('wrong');
+    speak('TENTE DE NOVO!');
+    setTimeout(()=>{
+      card.classList.remove('wrong','disabled');
+      cards.forEach(c=>c.classList.remove('disabled'));
+    },1000);
+  }
+}
+
+function handleLetterClick(card, letter){
+  if(card.classList.contains('disabled')) return;
+  const cards = document.querySelectorAll('.letter-card');
+  cards.forEach(c=>c.classList.add('disabled'));
+
+  if(letter === state.gameTarget){
+    card.classList.add('correct');
+    state.gameCorrect++;
+    triggerCelebration();
+    const data = ALFABETO[letter];
+    speak(data ? `ISSO! ${letter} DE ${data.nome}!` : `ISSO! A LETRA ${letter}!`);
+
+    setTimeout(()=>{
+      cards.forEach(c=>c.classList.remove('disabled','correct','wrong'));
+      nextRound();
+    },1800);
+  } else {
+    card.classList.add('wrong');
+    speak('TENTE DE NOVO!');
+    setTimeout(()=>{
+      card.classList.remove('wrong','disabled');
+      cards.forEach(c=>c.classList.remove('disabled'));
+    },1000);
+  }
+}
+
+function finishLevel(){
+  const modal = document.getElementById('gameModal');
+  modal.classList.remove('open');
+  state.gameActive = false;
+
+  const levelId = state.currentLevel;
+  if(!state.levelsCompleted.includes(levelId)){
+    state.levelsCompleted.push(levelId);
+  }
+  if(levelId < 3 && state.levelUnlocked <= levelId){
+    state.levelUnlocked = levelId + 1;
+  }
+  saveProgress();
+  updateMap();
+
+  // Reward: última letra usada
+  const lastLetter = state.gameUsedLetters.length > 0
+    ? state.gameUsedLetters[state.gameUsedLetters.length - 1]
+    : LEVELS.find(l=>l.id===levelId).letras[0];
+  setTimeout(()=>showTreasure(lastLetter), 400);
+}
+
+document.getElementById('level1Btn').addEventListener('click', ()=>startLevel(1));
+document.getElementById('level2Btn').addEventListener('click', ()=>startLevel(2));
+document.getElementById('level3Btn').addEventListener('click', ()=>startLevel(3));
+
+document.getElementById('modalClose').addEventListener('click',()=>{
+  document.getElementById('gameModal').classList.remove('open');
+  state.gameActive = false;
+});
+
+document.getElementById('gameModal').addEventListener('click',(e)=>{
+  if(e.target === e.currentTarget){
+    document.getElementById('gameModal').classList.remove('open');
+    state.gameActive = false;
+  }
+});
+
+// ============================================================
+//  PLAYGROUND CANVAS + TRACING
+// ============================================================
+let canvasInited = false;
+let canvas, ctx;
+let drawing = false;
+let currentColor = '#e53935';
+let brushSize = 8;
+let tracingActive = false;
+
+function initCanvas(){
+  if(canvasInited) return;
+  canvasInited = true;
+  canvas = document.getElementById('drawCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDraw);
+  canvas.addEventListener('mouseleave', stopDraw);
+
+  canvas.addEventListener('touchstart', (e)=>{ e.preventDefault(); const t=e.touches[0]; startDraw({offsetX:t.clientX-canvas.getBoundingClientRect().left,offsetY:t.clientY-canvas.getBoundingClientRect().top}); });
+  canvas.addEventListener('touchmove', (e)=>{ e.preventDefault(); const t=e.touches[0]; draw({offsetX:t.clientX-canvas.getBoundingClientRect().left,offsetY:t.clientY-canvas.getBoundingClientRect().top}); });
+  canvas.addEventListener('touchend', (e)=>{ e.preventDefault(); stopDraw(); });
+
+  // Tracing toggle
+  document.getElementById('tracingToggleBtn').addEventListener('click', toggleTracing);
+
+  // Tracing letter buttons
+  document.querySelectorAll('.tracing-letter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tracing-letter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.tracingLetter = btn.dataset.letter;
+      drawTracingGuide(state.tracingLetter);
+    });
+  });
+}
+
+function resizeCanvas(){
+  const wrapper = canvas.parentElement;
+  const rect = wrapper.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = brushSize;
+  if(state.tracingLetter) drawTracingGuide(state.tracingLetter);
+}
+
+function startDraw(e){
+  drawing = true;
+  const pos = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
+
+function draw(e){
+  if(!drawing) return;
+  const pos = getPos(e);
+  ctx.strokeStyle = currentColor;
+  ctx.lineWidth = brushSize;
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
+
+function stopDraw(){
+  drawing = false;
+  ctx.beginPath();
+}
+
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  if(e.offsetX !== undefined) return {x:e.offsetX, y:e.offsetY};
+  return {x: e.clientX - rect.left, y: e.clientY - rect.top};
+}
+
+function toggleTracing(){
+  const controls = document.getElementById('tracingControls');
+  tracingActive = !tracingActive;
+  controls.style.display = tracingActive ? 'flex' : 'none';
+  document.getElementById('tracingToggleBtn').textContent = tracingActive ? '✏️ DESENHO LIVRE' : '🔤 TREINAR LETRAS';
+
+  if(!tracingActive){
+    state.tracingLetter = null;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  } else {
+    // Auto-select first letter
+    const first = document.querySelector('.tracing-letter-btn');
+    if(first){
+      first.classList.add('active');
+      state.tracingLetter = first.dataset.letter;
+      drawTracingGuide(state.tracingLetter);
+    }
+  }
+}
+
+function drawTracingGuide(letter){
+  if(!canvas || !ctx) return;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const size = Math.min(w, h) * 0.6;
+
+  // Draw dashed guide letter
+  ctx.save();
+  ctx.font = `bold ${size}px "Arial Black", "Impact", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Light gray outline (guide)
+  ctx.strokeStyle = 'rgba(200,200,200,0.6)';
+  ctx.lineWidth = 4;
+  ctx.setLineDash([8, 8]);
+  ctx.strokeText(letter, w/2, h/2);
+
+  // Inner dashed guide
+  ctx.strokeStyle = 'rgba(180,180,180,0.4)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 6]);
+  ctx.strokeText(letter, w/2, h/2);
+
+  ctx.restore();
+
+  // Draw starting dot
+  ctx.beginPath();
+  ctx.arc(w/2, h/2 - size*0.25, 8, 0, Math.PI*2);
+  ctx.fillStyle = '#66bb6a';
+  ctx.fill();
+
+  // Hint text
+  ctx.save();
+  ctx.font = '16px "Segoe UI", sans-serif';
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+    ctx.fillText(`✏️ CONTORNE A LETRA ${letter} COM O DEDO`, w/2, h - 10);
+  ctx.restore();
+}
+
+// Color buttons
+document.querySelectorAll('.color-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentColor = btn.dataset.color;
+    if(canvas) ctx.strokeStyle = currentColor;
+  });
+});
+
+// Clear
+document.querySelector('.clear-btn').addEventListener('click',()=>{
+  if(!canvas) return;
+  if(state.tracingLetter){
+    drawTracingGuide(state.tracingLetter);
+  } else {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+});
+
+// ============================================================
+//  COLLECTION / ALBUM
+// ============================================================
+function renderAlbum(){
+  const grid = document.getElementById('albumGrid');
+  grid.innerHTML = '';
+  if(state.stickers.length === 0){
+    grid.innerHTML = '<div class="album-empty"><span class="big-icon">📒</span>NENHUMA FIGURINHA AINDA!<br>COMPLETE OS NIVEIS PARA GANHAR!</div>';
+    return;
+  }
+  state.stickers.forEach(letra=>{
+    const data = ALFABETO[letra];
+    const slot = document.createElement('div');
+    slot.className = 'sticker-slot filled';
+    slot.innerHTML = `${data ? data.emoji : '⭐'}<br><small style="font-size:14px;font-weight:700">${letra}</small>`;
+    slot.title = data ? data.nome : 'Figurinha';
+    grid.appendChild(slot);
+  });
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+loadProgress();
+updateMap();
+renderAlbum();
+
+setTimeout(()=>{
+  speak('BEM-VINDA SARA! VAMOS APRENDER AS LETRAS? CLIQUE NAS VOGAIS PARA COMECAR!');
+}, 800);
+
+console.log('🔤 Jogo da Sara - Letras carregado!');
+</script>
+</body>
+</html>
