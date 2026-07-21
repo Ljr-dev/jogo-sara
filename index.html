@@ -151,31 +151,106 @@ body{display:flex;background:linear-gradient(135deg,#fdf6e3 0%,#fce9d8 100%)}
 .collection-header h1{font-size:clamp(22px,4vw,36px);color:#5a3e2b;text-shadow:2px 2px 0 rgba(255,200,100,.3)}
 .collection-sub{font-size:clamp(13px,2vw,17px);color:#8a7a6a;margin-top:4px}
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE - MOBILE FIRST ===== */
+@media(max-width:768px){
+.sidebar{width:64px;min-width:64px;padding:10px 4px;gap:6px}
+.sidebar-btn{width:48px;height:48px;border-radius:14px}
+.sidebar-btn .icon{font-size:20px}
+.sidebar-btn .label{font-size:7px;letter-spacing:.3px}
+.main{padding:10px 12px}
+.main .learn-header{gap:8px}
+.main .learn-header h1{font-size:clamp(18px,4.5vw,24px)}
+.main .learn-header .level-badge{font-size:clamp(10px,2.5vw,13px);padding:3px 12px}
+.modal-content{width:94vw;padding:clamp(12px,3vw,20px);border-radius:20px}
+.modal-title{font-size:clamp(16px,4vw,22px);margin-bottom:12px;padding-right:36px}
+.modal-close{top:8px;right:10px;font-size:28px;width:36px;height:36px}
+.animal-card{width:clamp(90px,26vw,130px);height:clamp(90px,26vw,130px);border-radius:18px;padding:8px;gap:4px}
+.animal-card .animal-emoji{font-size:clamp(36px,10vw,50px)}
+.animal-card .animal-name{font-size:clamp(11px,2.5vw,14px)}
+.letter-card{width:clamp(65px,20vw,100px);height:clamp(65px,20vw,100px);border-radius:18px;padding:6px}
+.letter-card .letter-char{font-size:clamp(28px,8vw,42px)}
+.letter-card .letter-label{font-size:clamp(9px,2vw,12px)}
+.letter-big{font-size:clamp(60px,18vw,110px)!important}
+.letter-hint{font-size:clamp(13px,3vw,17px)}
+.progress-text{font-size:clamp(12px,2.5vw,15px)}
+.progress-bar{height:10px;margin:8px 0}
+.game-cards{gap:clamp(8px,2vw,14px)}
+}
 @media(max-width:600px){
-.sidebar{width:70px;min-width:70px;padding:12px 6px;gap:8px}
-.sidebar-btn{width:52px;height:52px;border-radius:16px}
-.sidebar-btn .icon{font-size:22px}
-.sidebar-btn .label{font-size:8px}
-.main{padding:12px}
-.map{flex-direction:column;gap:6px}
-.map-connector{transform:rotate(90deg);font-size:20px}
-.map-circle{width:clamp(70px,25vw,100px);height:clamp(70px,25vw,100px);font-size:clamp(30px,10vw,45px)}
-.animal-card{width:clamp(100px,28vw,150px);height:clamp(100px,28vw,150px)}
-.album-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+.sidebar{width:56px;min-width:56px;padding:8px 4px;gap:5px}
+.sidebar-btn{width:42px;height:42px;border-radius:12px;border-width:2px}
+.sidebar-btn .icon{font-size:18px}
+.sidebar-btn .label{font-size:6.5px;letter-spacing:.2px}
+.main{padding:8px 10px}
+.main .learn-header h1{font-size:clamp(16px,4vw,20px)}
+.map{flex-direction:column;gap:4px}
+.map-connector{transform:rotate(90deg);font-size:18px}
+.map-circle{width:clamp(65px,22vw,90px);height:clamp(65px,22vw,90px);font-size:clamp(28px,8vw,38px);border-width:3px}
+.map-step-label{font-size:clamp(10px,2vw,13px);max-width:90px}
+.map-step{gap:4px}
+.animal-card{width:clamp(80px,28vw,110px);height:clamp(80px,28vw,110px)}
+.letter-card{width:clamp(55px,22vw,85px);height:clamp(55px,22vw,85px)}
+.letter-card .letter-char{font-size:clamp(22px,8vw,36px)}
+.album-grid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px}
+.sticker-slot{font-size:clamp(22px,5vw,35px);border-radius:12px}
+.tools-bar{gap:6px}
+.color-btn{width:clamp(28px,7vw,38px);height:clamp(28px,7vw,38px)}
+.clear-btn,.play-sound-btn{padding:6px 12px;font-size:clamp(11px,2.5vw,13px)}
+.tracing-controls{gap:6px;padding:4px}
+.tracing-letter-btn{width:clamp(32px,9vw,44px);height:clamp(32px,9vw,44px);font-size:clamp(16px,4vw,22px);border-radius:10px;border-width:2px}
+.treasure-emoji{font-size:clamp(60px,20vw,100px)}
+.treasure-title{font-size:clamp(22px,6vw,32px)}
+.treasure-sub{font-size:clamp(14px,3vw,18px)}
+.treasure-btn{padding:10px 28px;font-size:clamp(14px,3vw,18px)}
+.collection-header h1{font-size:clamp(18px,4.5vw,24px)}
+.collection-sub{font-size:clamp(11px,2.5vw,14px)}
 }
 @media(max-width:400px){
-.sidebar{width:56px;min-width:56px;padding:8px 4px;gap:6px}
-.sidebar-btn{width:44px;height:44px;border-radius:12px}
-.sidebar-btn .icon{font-size:18px}
-.sidebar-btn .label{font-size:7px}
-.main{padding:8px}
-.animal-card{width:clamp(80px,35vw,120px);height:clamp(80px,35vw,120px)}
-.animal-card .animal-emoji{font-size:clamp(32px,12vw,50px)}
+.sidebar{width:46px;min-width:46px;padding:6px 3px;gap:4px}
+.sidebar-btn{width:36px;height:36px;border-radius:10px;border-width:2px}
+.sidebar-btn .icon{font-size:15px}
+.sidebar-btn .label{font-size:5.5px;letter-spacing:.1px;display:none}
+.main{padding:6px 8px}
+.modal-content{padding:10px;width:96vw;border-radius:16px;border-width:3px}
+.animal-card{width:clamp(65px,30vw,90px);height:clamp(65px,30vw,90px);border-radius:14px;padding:6px}
+.animal-card .animal-emoji{font-size:clamp(28px,12vw,40px)}
+.animal-card .animal-name{font-size:clamp(9px,3vw,11px)}
+.letter-card{width:clamp(48px,24vw,70px);height:clamp(48px,24vw,70px);border-radius:12px}
+.letter-card .letter-char{font-size:clamp(18px,8vw,28px)}
+.map-circle{width:clamp(50px,24vw,72px);height:clamp(50px,24vw,72px);font-size:clamp(22px,9vw,32px)}
+.map-step-label{font-size:clamp(8px,2.5vw,11px);max-width:70px}
+.map-connector{font-size:14px}
+.game-cards{gap:6px}
+.canvas-wrapper{border-width:3px;border-radius:16px;min-height:140px}
 }
-@media(min-width:1024px){
+@media(min-width:768px){
 .map{flex-direction:row}
 .map-connector{transform:none}
+}
+
+/* ===== LANDSCAPE MOBILE ===== */
+@media(max-height:500px) and (orientation:landscape){
+.sidebar{width:50px;min-width:50px;padding:6px 3px;gap:4px}
+.sidebar-btn{width:38px;height:38px;border-radius:10px}
+.sidebar-btn .icon{font-size:16px}
+.sidebar-btn .label{font-size:6px;display:none}
+.main{padding:6px 10px}
+.main .learn-header{margin-bottom:6px}
+.map-circle{width:clamp(50px,12vw,80px);height:clamp(50px,12vw,80px);font-size:clamp(22px,5vw,32px)}
+.map-step-label{font-size:clamp(8px,1.2vw,11px)}
+.map-connector{font-size:clamp(12px,2vw,16px)}
+.map{gap:2px}
+.animal-card{width:clamp(60px,15vw,90px);height:clamp(60px,15vw,90px)}
+.letter-card{width:clamp(50px,12vw,70px);height:clamp(50px,12vw,70px)}
+.letter-big{font-size:clamp(40px,10vw,70px)!important}
+.modal-content{max-height:85vh;padding:10px 14px}
+.canvas-wrapper{min-height:120px}
+.tracing-letter-btn{width:clamp(28px,6vw,36px);height:clamp(28px,6vw,36px);font-size:clamp(14px,3vw,18px)}
+}
+@media(max-height:400px) and (orientation:landscape){
+.map-circle{width:clamp(40px,10vw,60px);height:clamp(40px,10vw,60px);font-size:clamp(18px,4vw,26px)}
+.map-step-label{display:none}
+.main{padding:4px 8px}
 }
 </style>
 </head>
@@ -389,19 +464,48 @@ function saveProgress(){
 }
 
 // ============================================================
-//  SPEECH
+//  SPEECH - Voz infantil e elegante
 // ============================================================
+let selectedVoice = null;
+
+function initVoice(){
+  if(!window.speechSynthesis) return;
+  // Try to find a nice Portuguese female/child voice
+  const voices = speechSynthesis.getVoices();
+  if(voices.length === 0){
+    speechSynthesis.addEventListener('voiceschanged', ()=>{
+      selectVoice(speechSynthesis.getVoices());
+    }, {once: true});
+  } else {
+    selectVoice(voices);
+  }
+}
+
+function selectVoice(voices){
+  // Priority: Portuguese BR female > Portuguese female > any Portuguese > any female
+  const pref = voices.find(v => /pt[-_]BR/i.test(v.lang) && /female|Maria|Helena|Luciana|Isabella/i.test(v.name));
+  const ptBr = voices.find(v => /pt[-_]BR/i.test(v.lang));
+  const pt = voices.find(v => /^pt\b/i.test(v.lang));
+  const anyFemale = voices.find(v => /female|woman|girl/i.test(v.name));
+  selectedVoice = pref || ptBr || pt || anyFemale || voices[0];
+}
+
 function speak(text, cb){
   if(!window.speechSynthesis) { if(cb)cb(); return; }
   speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'pt-BR';
-  utter.rate = 0.85;
-  utter.pitch = 1.2;
+  utter.rate = 0.78;
+  utter.pitch = 1.45;
+  utter.volume = 1;
+  if(selectedVoice) utter.voice = selectedVoice;
   utter.onend = ()=>{ if(cb)cb(); };
   utter.onerror = ()=>{ if(cb)cb(); };
   speechSynthesis.speak(utter);
 }
+
+// Init voices on page load
+initVoice();
 
 // ============================================================
 //  CELEBRATION
