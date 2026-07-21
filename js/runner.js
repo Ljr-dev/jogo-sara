@@ -1,317 +1,458 @@
-// ===== RUNNER (Subway Surfers Style) - CORRIGIDO =====
-let rC, rCtx, rRun = false, rAnim = null, rScore = 0, rSpd = 4;
-let rLane = 1, rLX = 0, rY = 0, rJump = false, rJumpV = 0;
-let rSlide = false, rSlT = 0, rObs = [], rCoins = [], rStars = [];
-let rF = 0, rBg = 0, rGnd = 0, rRunCyc = 0;
-let rSX = 0, rSY = 0, rOver = false;
-let rCombo = 0, rTotCoins = 0, rObsT = 0, rCoinT = 0;
+// ===== SUPER MARIO SNES STYLE =====
+let c, ctx, run = false, anim = null, score = 0, coins = 0;
+let player = {x:0, y:0, vy:0, w:28, h:36, jumping:false, jumpHold:0};
+let obstacles = [], coinItems = [], blocks = [];
+let frame = 0, scrollX = 0, speed = 3, groundY = 0;
+let sx = 0, over = false, jumpPressed = false;
+let particles = [];
 
-// Pre-generate building windows so they don't flicker
-let rBuildWins = [];
-function genBuildWins(){
-  rBuildWins = [];
-  for(let i=0;i<8;i++){
-    const wins = [];
-    const bh = 50 + Math.sin(i*2.3)*30 + 30;
-    for(let wy=0;wy<bh-15;wy+=18)
-      for(let wx=0;wx<55;wx+=20)
-        wins.push(Math.random()>0.3);
-    rBuildWins.push(wins);
-  }
-}
-genBuildWins();
+// === CANVAS SIZE CONSTANTS (Mario proportions) ===
+// Ground is at 75% of canvas height
+// Player stands on ground
 
 function startRunner(){
   const area = document.getElementById('runnerArea');
-  rC = document.getElementById('runnerCanvas');
-  if(!rC) return;
-  rC.width = area.clientWidth;
-  rC.height = area.clientHeight;
-  rCtx = rC.getContext('2d');
+  c = document.getElementById('runnerCanvas');
+  if(!c) return;
+  c.width = area.clientWidth;
+  c.height = area.clientHeight;
+  ctx = c.getContext('2d');
   
-  rRun = true; rOver = false; rScore = 0; rSpd = 4;
-  rLane = 1; rLX = rC.width * 0.22; // Player on LEFT side
-  rY = 0; rJump = false; rJumpV = 0;
-  rSlide = false; rSlT = 0;
-  rObs = []; rCoins = []; rStars = [];
-  rF = 0; rBg = 0; rGnd = 0; rRunCyc = 0;
-  rCombo = 0; rTotCoins = 0; rObsT = 0; rCoinT = 0;
+  const h = c.height;
+  groundY = h * 0.78;
+  
+  run = true; over = false; score = 0; coins = 0; frame = 0; speed = 3; scrollX = 0;
+  player.x = c.width * 0.15;
+  player.y = groundY - 36;
+  player.vy = 0; player.jumping = false; player.jumpHold = 0;
+  obstacles = []; coinItems = []; blocks = []; particles = [];
+  jumpPressed = false;
   
   document.getElementById('runnerOverlay').classList.add('hidden');
   document.getElementById('runnerScore').textContent = '0';
   
-  rC.ontouchstart = e=>{ const t=e.touches[0]; rSX=t.clientX; rSY=t.clientY; };
-  rC.ontouchend = e=>{ const t=e.changedTouches[0]; swipe(t.clientX-rSX, t.clientY-rSY); };
-  rC.onmousedown = e=>{ rSX=e.clientX; rSY=e.clientY; };
-  rC.onmouseup = e=>{ swipe(e.clientX-rSX, e.clientY-rSY); };
-  document.onkeydown = e=>{ keyHandler(e.key); };
+  // Touch/click to jump
+  c.ontouchstart = e=>{ e.preventDefault(); if(!over) doJump(); };
+  c.onmousedown = e=>{ if(!over) doJump(); };
   
-  if(rAnim) cancelAnimationFrame(rAnim);
-  rAnim = requestAnimationFrame(loop);
+  // "Tap to jump" replay
+  c.ontouchend = ()=>{};
+  
+  document.onkeydown = e=>{ if(e.key===' '||e.key==='ArrowUp'||e.key==='ArrowDown'){ e.preventDefault(); if(!over) doJump(); } };
+  
+  if(anim) cancelAnimationFrame(anim);
+  anim = requestAnimationFrame(loop);
 }
 
-function swipe(dx,dy){
-  if(!rRun||rOver) return;
-  if(Math.abs(dx)>Math.abs(dy)){
-    if(dx>30) rLane=Math.min(2,rLane+1);
-    else if(dx<-30) rLane=Math.max(0,rLane-1);
-  } else {
-    if(dy<-30&&!rJump&&!rSlide){ rJump=true; rJumpV=-14; }
-    else if(dy>30&&!rJump&&!rSlide){ rSlide=true; rSlT=30; }
+function doJump(){
+  if(!player.jumping){
+    player.jumping = true;
+    player.vy = -11;
+    player.jumpHold = 0;
+  } else if(player.vy < -3) {
+    // Variable height - hold to jump higher
+    player.vy -= 1.5;
   }
-}
-function keyHandler(k){
-  if(!rRun||rOver) return;
-  if(k==='ArrowLeft') rLane=Math.max(0,rLane-1);
-  if(k==='ArrowRight') rLane=Math.min(2,rLane+1);
-  if(k==='ArrowUp'&&!rJump&&!rSlide){ rJump=true; rJumpV=-14; }
-  if(k==='ArrowDown'&&!rJump&&!rSlide){ rSlide=true; rSlT=30; }
 }
 
 function loop(){
-  if(!rRun) return;
-  rF++; const w=rC.width, h=rC.height;
+  if(!run) return;
+  frame++;
+  const w = c.width, h = c.height;
   
-  rSpd = Math.min(rSpd+0.0015, 12);
+  // === SCROLL ===
+  speed = Math.min(speed + 0.001, 8);
+  scrollX += speed;
   
-  // Jump
-  if(rJump){ rY+=rJumpV; rJumpV+=0.7; if(rY>=0){ rY=0; rJump=false; } }
-  if(rSlide){ rSlT--; if(rSlT<=0) rSlide=false; }
-  
-  rRunCyc = (rRunCyc + rSpd*0.05) % (Math.PI*2);
-  rBg = (rBg + rSpd*0.4) % 300;
-  rGnd = (rGnd + rSpd) % 100;
-  
-  // --- SPAWN ---
-  rObsT--;
-  if(rObsT<=0){
-    rObs.push({lane:Math.floor(Math.random()*3), x:w+40, type:['🚧','🚂','📦','🚧','🚂'][Math.floor(Math.random()*5)], hit:false});
-    rObsT = Math.max(25, Math.floor(55-rSpd*2.5)) + Math.floor(Math.random()*20);
+  // === PLAYER PHYSICS ===
+  // Gravity
+  if(player.jumping){
+    player.vy += 0.55; // Mario floaty gravity
+    player.y += player.vy;
+    player.jumpHold++;
+    
+    // Land on ground
+    if(player.y >= groundY - 36){
+      player.y = groundY - 36;
+      player.vy = 0;
+      player.jumping = false;
+      // Landing particles
+      for(let i=0;i<3;i++) particles.push({x:player.x+14, y:groundY, vx:(Math.random()-0.5)*3, vy:-Math.random()*2-1, life:10, type:'dust'});
+    }
+    
+    // Head bump on top of pipes/blocks
+    for(let o of obstacles){
+      if(o.type==='pipe'||o.type==='box'){
+        const ox = o.x - scrollX;
+        const oy = o.y;
+        const ow = o.type==='pipe'?40:32;
+        const oh = o.type==='pipe'?o.h:32;
+        // Check head bump
+        if(player.x+player.w > ox && player.x < ox+ow && player.y < oy+oh && player.y > oy+oh-15 && player.vy < 0){
+          player.vy = 0;
+          player.y = oy+oh;
+          // Bump block
+          if(o.type==='box' && !o.hit){
+            o.hit = true;
+            coins++;
+            score += 10;
+            // Coin burst
+            for(let i=0;i<6;i++) particles.push({x:ox+16, y:oy, vx:(Math.random()-0.5)*8, vy:-Math.random()*6-4, life:15, type:'coin'});
+            // Bump animation
+            o.bumpY = -8;
+            o.bumpTimer = 8;
+          }
+        }
+      }
+    }
+  } else {
+    // Running animation - slight bob
+    // Check if falling into pit
+    checkPitFall();
   }
-  rCoinT--;
-  if(rCoinT<=0){
-    rCoins.push({lane:Math.floor(Math.random()*3), x:w+40, got:false});
-    rCoinT = 12 + Math.floor(Math.random()*18);
+  
+  // Fall below screen = die
+  if(player.y > h + 50){ gameOver(); return; }
+  
+  // === SPAWN ===
+  // Pipes
+  if(frame % Math.max(60, Math.floor(120 - speed*6)) === 0){
+    const ph = 30 + Math.floor(Math.random() * 35);
+    obstacles.push({type:'pipe', x:c.width + scrollX + 100, y:groundY - ph, w:40, h:ph, hit:false});
   }
-  if(Math.random()<0.004) rStars.push({lane:Math.floor(Math.random()*3), x:w+40, got:false});
   
-  // --- MOVE (leftward = running right) ---
-  rObs.forEach(o=>o.x-=rSpd);
-  rObs = rObs.filter(o=>o.x>-60);
-  rCoins.forEach(c=>c.x-=rSpd);
-  rCoins = rCoins.filter(c=>c.x>-40);
-  rStars.forEach(s=>s.x-=rSpd);
-  rStars = rStars.filter(s=>s.x>-40);
+  // Boxes (mario blocks)
+  if(frame % Math.max(80, Math.floor(160 - speed*8)) === 0 && Math.random()>0.5){
+    obstacles.push({type:'box', x:c.width + scrollX + 100, y:groundY - 55, w:32, h:32, hit:false, bumpY:0, bumpTimer:0});
+  }
   
-  // Player lane position
-  const laneW = w*0.22; // lanes on left portion
-  const baseX = w*0.10; // left margin
-  const px = baseX + rLane * laneW + laneW/2;
+  // Goombas (small enemies on ground)
+  if(frame % Math.max(90, Math.floor(150 - speed*7)) === 0 && Math.random()>0.4){
+    obstacles.push({type:'goomba', x:c.width + scrollX + 100, y:groundY - 28, w:28, h:28, hit:false});
+  }
   
-  // --- COLLISION ---
-  for(let o of rObs){
+  // Coins in air
+  if(frame % Math.max(50, Math.floor(100 - speed*4)) === 0){
+    const cy = groundY - 40 - Math.random() * 80;
+    coinItems.push({x:c.width + scrollX + 80, y:cy, got:false});
+  }
+  
+  // Pits (gaps in ground)
+  if(frame % 300 === 0 && frame > 100){
+    obstacles.push({type:'pit', x:c.width + scrollX + 100, w:50, hit:false});
+  }
+  
+  // === MOVE OBJECTS ===
+  for(let o of obstacles){
+    if(o.bumpTimer){
+      o.bumpTimer--;
+      o.bumpY += o.bumpTimer > 4 ? -2 : 2;
+    }
+    if(o.type==='goomba' && !o.hit) o.x += 0.5; // goombas walk right slowly
+  }
+  
+  // === COLLISION ===
+  const px = player.x;
+  const py = player.y;
+  const pw = player.w;
+  const ph = player.h;
+  
+  for(let o of obstacles){
     if(o.hit) continue;
-    if(Math.abs(o.x-px)<20 && o.lane===rLane){
-      if(rJump&&rY<-8){ o.hit=true; rCombo++; continue; }
-      if(rSlide&&o.type==='📦'){ o.hit=true; rCombo++; continue; }
+    const ox = o.x - scrollX;
+    const ow = o.type==='pipe'?40:(o.type==='box'?32:(o.type==='goomba'?28:0));
+    const oh = o.type==='pipe'?o.h:(o.type==='box'?32:(o.type==='goomba'?28:0));
+    const oy = o.y + (o.bumpY||0);
+    
+    if(o.type === 'pit'){
+      // Check if player is over pit
+      if(px + pw > ox && px < ox + 50 && !player.jumping){
+        gameOver(); return;
+      }
+      continue;
+    }
+    
+    // Side/bottom collision
+    if(px + pw > ox + 8 && px < ox + ow - 8 && py + ph > oy + 8 && py < oy + oh - 8){
+      // Landing on top of obstacle
+      if(py + ph - oy < 15 && player.vy >= 0){
+        player.y = oy - ph;
+        player.vy = 0;
+        player.jumping = false;
+        // Stomp goomba
+        if(o.type === 'goomba'){
+          o.hit = true;
+          score += 20;
+          for(let i=0;i<4;i++) particles.push({x:ox+14, y:oy, vx:(Math.random()-0.5)*5, vy:-Math.random()*3-2, life:12, type:'stomp'});
+        }
+      } else if(py + ph - oy > 10 && player.vy > 0) {
+        // Hit side = die
+        gameOver(); return;
+      }
+    }
+  }
+  
+  // Coin collection
+  for(let cItem of coinItems){
+    if(cItem.got) continue;
+    const cx = cItem.x - scrollX;
+    if(px + pw > cx - 8 && px < cx + 8 && py + ph > cItem.y - 8 && py < cItem.y + 8){
+      cItem.got = true;
+      coins++;
+      score += 5;
+      for(let i=0;i<5;i++) particles.push({x:cx, y:cItem.y, vx:(Math.random()-0.5)*6, vy:-Math.random()*5-3, life:14, type:'coin'});
+    }
+  }
+  
+  // Score
+  if(frame % 5 === 0){ score++; document.getElementById('runnerScore').textContent = score + (coins>0?' 🪙'+coins:''); }
+  
+  // === DRAW ===
+  drawMarioLevel(w, h);
+  
+  anim = requestAnimationFrame(loop);
+}
+
+function drawMarioLevel(w, h){
+  // === SKY (Mario blue) ===
+  ctx.fillStyle = '#5c94fc';
+  ctx.fillRect(0, 0, w, h);
+  
+  // === CLOUDS (Mario style puffy) ===
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  for(let i=0;i<4;i++){
+    const cx = ((i*250 - scrollX * 0.3) % 1000 + 1000) % 1000 - 100;
+    const cy = 30 + i*18;
+    // Big cloud
+    ctx.beginPath();
+    ctx.arc(cx, cy, 35, 0, Math.PI*2); ctx.fill();
+    ctx.arc(cx+25, cy-8, 28, 0, Math.PI*2); ctx.fill();
+    ctx.arc(cx-20, cy+3, 25, 0, Math.PI*2); ctx.fill();
+    ctx.arc(cx+10, cy+5, 22, 0, Math.PI*2); ctx.fill();
+  }
+  
+  // === HILLS (Mario green hills) ===
+  for(let i=0;i<4;i++){
+    const hx = ((i*300 - scrollX * 0.5) % 1200 + 1200) % 1200 - 150;
+    const hh = 50 + Math.sin(i*1.7)*20;
+    ctx.fillStyle = '#5ab45a';
+    ctx.beginPath();
+    ctx.moveTo(hx, groundY);
+    ctx.quadraticCurveTo(hx+40, groundY-hh-20, hx+80, groundY);
+    ctx.fill();
+    ctx.fillStyle = '#6cc96c';
+    ctx.beginPath();
+    ctx.moveTo(hx+15, groundY);
+    ctx.quadraticCurveTo(hx+45, groundY-hh-10, hx+70, groundY);
+    ctx.fill();
+  }
+  
+  // === BUSHES ===
+  ctx.fillStyle = '#3a9a3a';
+  for(let i=0;i<3;i++){
+    const bx = ((i*400 - scrollX * 0.7) % 1200 + 1200) % 1200 - 100;
+    ctx.beginPath(); ctx.arc(bx, groundY-5, 22, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx+18, groundY-8, 18, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx-15, groundY-3, 15, Math.PI, 0); ctx.fill();
+  }
+  
+  // === QUESTIONS BLOCKS (in air) ===
+  for(let i=0;i<2;i++){
+    const bx = ((i*500 - scrollX * 0.8) % 1000 + 1000) % 1000 - 100;
+    const by = groundY - 90;
+    // Block
+    ctx.fillStyle = '#c84c0c';
+    ctx.fillRect(bx, by, 32, 32);
+    ctx.strokeStyle = '#e8a828'; ctx.lineWidth = 2;
+    ctx.strokeRect(bx, by, 32, 32);
+    // Question mark
+    ctx.fillStyle = '#FFE600';
+    ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', bx+16, by+16);
+  }
+  
+  // === GROUND ===
+  // Main ground (brown)
+  ctx.fillStyle = '#c47a3a';
+  ctx.fillRect(0, groundY, w, h - groundY);
+  
+  // Grass on top
+  ctx.fillStyle = '#5ab45a';
+  ctx.fillRect(0, groundY-4, w, 8);
+  
+  // Dark grass line
+  ctx.fillStyle = '#3a8a3a';
+  ctx.fillRect(0, groundY-2, w, 3);
+  
+  // Ground texture (bricks pattern)
+  ctx.strokeStyle = '#a06020'; ctx.lineWidth = 1;
+  for(let gy = groundY+6; gy < h; gy += 16){
+    const offset = ((gy/16) % 2) * 20;
+    for(let gx = -scrollX % 40 + offset; gx < w; gx += 40){
+      ctx.strokeRect(gx, gy, 20, 16);
+    }
+  }
+  
+  // === PITS ===
+  for(let o of obstacles){
+    if(o.type !== 'pit') continue;
+    const ox = o.x - scrollX;
+    if(ox < -60 || ox > w+60) continue;
+    // Dark pit
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(ox, groundY-4, 50, h - groundY + 4);
+    // Pit edge highlight
+    ctx.fillStyle = '#c47a3a';
+    ctx.fillRect(ox-2, groundY-4, 4, 8);
+    ctx.fillRect(ox+50-2, groundY-4, 4, 8);
+  }
+  
+  // === OBSTACLES ===
+  for(let o of obstacles){
+    if(o.hit && o.type !== 'box') continue;
+    const ox = o.x - scrollX;
+    if(ox < -60 || ox > w+60) continue;
+    const oy = o.y + (o.bumpY||0);
+    
+    if(o.type === 'pipe'){
+      // Mario green pipe
+      ctx.fillStyle = '#2a9a2a';
+      ctx.fillRect(ox-5, groundY-10, 50, 12); // lip
+      ctx.fillStyle = '#3ab43a';
+      ctx.fillRect(ox, oy, 40, o.h);
+      ctx.fillStyle = '#2a9a2a';
+      ctx.fillRect(ox+6, oy, 6, o.h);
+      // Highlight
+      ctx.fillStyle = '#5ad45a';
+      ctx.fillRect(ox+4, oy+2, 4, o.h-4);
+    }
+    else if(o.type === 'box'){
+      if(o.hit){
+        // Hit block (empty/darker)
+        ctx.fillStyle = '#8a5a3a';
+        ctx.fillRect(ox, oy, 32, 32);
+        ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 2;
+        ctx.strokeRect(ox, oy, 32, 32);
+      } else {
+        // ? Block
+        ctx.fillStyle = '#c84c0c';
+        ctx.fillRect(ox, oy, 32, 32);
+        ctx.strokeStyle = '#e8a828'; ctx.lineWidth = 2;
+        ctx.strokeRect(ox, oy, 32, 32);
+        ctx.fillStyle = '#FFE600';
+        ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('?', ox+16, oy+16);
+        // Shine
+        ctx.fillStyle = 'rgba(255,255,200,0.2)';
+        ctx.fillRect(ox+2, oy+2, 28, 14);
+      }
+    }
+    else if(o.type === 'goomba'){
+      if(o.hit){
+        // Squished goomba
+        ctx.font = '16px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('👾', ox+14, oy+24);
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.beginPath(); ctx.ellipse(ox+14, oy+26, 12, 3, 0, 0, Math.PI*2); ctx.fill();
+      } else {
+        // Walking goomba
+        const wobble = Math.sin(frame * 0.15) * 3;
+        ctx.font = '28px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('👾', ox+14, oy+22 + wobble);
+        // Shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath(); ctx.ellipse(ox+14, oy+28, 12, 3, 0, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  }
+  
+  // === COINS ===
+  for(let cItem of coinItems){
+    if(cItem.got) continue;
+    const cx = cItem.x - scrollX;
+    if(cx < -20 || cx > w+20) continue;
+    const bobY = Math.sin(frame * 0.1 + cItem.x) * 4;
+    
+    ctx.save();
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 10;
+    ctx.font = '24px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('🪙', cx, cItem.y + bobY);
+    ctx.restore();
+  }
+  
+  // === PLAYER (MARIO) ===
+  const px = player.x;
+  const py = player.y;
+  
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  const shadowW = player.jumping ? 14 : 22;
+  ctx.beginPath(); ctx.ellipse(px+14, groundY-2, shadowW, 4, 0, 0, Math.PI*2);
+  ctx.fill();
+  
+  // Player with run animation
+  if(player.jumping){
+    // Jump pose (arms up)
+    ctx.font = '34px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('🏃', px+14, py+24);
+  } else {
+    // Running animation - alternate legs
+    const runFrame = Math.floor(frame * speed * 0.08) % 4;
+    ctx.font = '32px sans-serif'; ctx.textAlign = 'center';
+    if(runFrame === 1 || runFrame === 3){
+      ctx.fillText('🏃', px+14, py+26);
+    } else {
+      ctx.fillText('🚶', px+14, py+26);
+    }
+  }
+  
+  // === PARTICLES ===
+  if(particles.length > 0){
+    particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+      ctx.globalAlpha = p.life / (p.type==='coin'?15:12);
+      ctx.font = (p.type==='coin'?'14px':'10px')+' sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(p.type==='coin'?'🪙':(p.type==='stomp'?'💥':'•'), p.x, p.y);
+      ctx.globalAlpha = 1;
+    });
+    particles = particles.filter(p => p.life > 0);
+  }
+  
+  // === HUD ===
+  ctx.save();
+  ctx.font = 'bold 14px Arial'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 3;
+  ctx.fillText('🪙 '+coins, 12, 30);
+  ctx.fillStyle = '#FFE600';
+  ctx.fillText('SCORE: '+score, 12, 52);
+  ctx.restore();
+}
+
+function checkPitFall(){
+  // Check if player is over a pit
+  for(let o of obstacles){
+    if(o.type !== 'pit') continue;
+    const ox = o.x - scrollX;
+    if(player.x + player.w > ox + 5 && player.x < ox + 45 && !player.jumping){
       gameOver(); return;
     }
   }
-  
-  // Coins
-  rCoins.forEach(c=>{
-    if(c.got) return;
-    if(Math.abs(c.x-px)<18 && c.lane===rLane){
-      c.got=true; rScore+=5; rTotCoins++;
-      spawnParticles(c.x, h*0.6);
-    }
-  });
-  rStars.forEach(s=>{
-    if(s.got) return;
-    if(Math.abs(s.x-px)<18 && s.lane===rLane){ s.got=true; rScore+=20; }
-  });
-  
-  if(rF%3===0){ rScore++; document.getElementById('runnerScore').textContent=rScore; }
-  
-  // ===== DRAW =====
-  rCtx.clearRect(0,0,w,h);
-  
-  // Sky
-  const sg=rCtx.createLinearGradient(0,0,0,h*0.55);
-  sg.addColorStop(0,'#4FC3F7'); sg.addColorStop(1,'#B3E5FC');
-  rCtx.fillStyle=sg; rCtx.fillRect(0,0,w,h*0.6);
-  
-  // Clouds (scroll right = wind)
-  rCtx.fillStyle='rgba(255,255,255,0.5)';
-  for(let i=0;i<3;i++){
-    const cx=(i*220-rBg*0.3%660+660)%660-80;
-    const cy=25+i*25;
-    rCtx.beginPath(); rCtx.ellipse(cx,cy,45,18,0,0,Math.PI*2); rCtx.fill();
-    rCtx.beginPath(); rCtx.ellipse(cx+18,cy-6,30,15,0,0,Math.PI*2); rCtx.fill();
-  }
-  
-  // Buildings (parallax)
-  const bCols=['#90A4AE','#78909C','#B0BEC5','#546E7A','#607D8B'];
-  for(let i=0;i<8;i++){
-    const bx=(i*85-rBg*1.5%680+680)%680-60;
-    const bh=45+Math.sin(i*2.3)*25+25;
-    rCtx.fillStyle=bCols[i%5];
-    rCtx.fillRect(bx,h*0.55-bh-8,70,bh+8);
-    // Windows (pre-generated to avoid flicker)
-    rCtx.fillStyle='rgba(255,255,200,0.6)';
-    let wi=0;
-    for(let wy=0;wy<bh-12;wy+=16)
-      for(let wx=0;wx<50;wx+=18){
-        if(rBuildWins[i]&&rBuildWins[i][wi]) rCtx.fillRect(bx+12+wx,h*0.55-bh+6+wy,7,9);
-        wi++;
-      }
-  }
-  
-  // Road
-  const rTop=h*0.55, rBot=h;
-  const rg=rCtx.createLinearGradient(0,rTop,0,rBot);
-  rg.addColorStop(0,'#555'); rg.addColorStop(0.4,'#444'); rg.addColorStop(1,'#222');
-  rCtx.fillStyle=rg; rCtx.fillRect(0,rTop,w,rBot-rTop);
-  
-  // Road top edge
-  rCtx.strokeStyle='#FFE600'; rCtx.lineWidth=3;
-  rCtx.beginPath(); rCtx.moveTo(0,rTop); rCtx.lineTo(w,rTop); rCtx.stroke();
-  
-  // Lane lines (on the left portion where player runs)
-  rCtx.strokeStyle='rgba(255,255,255,0.3)'; rCtx.lineWidth=2; rCtx.setLineDash([12,18]);
-  for(let i=0;i<=2;i++){
-    const lx=baseX+i*laneW;
-    rCtx.beginPath(); rCtx.moveTo(lx,rTop); rCtx.lineTo(lx,rBot); rCtx.stroke();
-  }
-  rCtx.setLineDash([]);
-  
-  // Ground dashes (speed feel)
-  rCtx.fillStyle='rgba(255,255,255,0.1)';
-  for(let i=0;i<6;i++){
-    const gx=(i*70-rGnd*2.5%420+420)%420-20;
-    rCtx.fillRect(gx,rBot-14,18,3);
-  }
-  
-  // Side objects
-  rCtx.font='22px sans-serif'; rCtx.textAlign='center';
-  for(let i=0;i<3;i++){
-    const sx=(i*250-rBg*1.2%750+750)%750-60;
-    rCtx.fillText(['🌳','🌲','🏪'][i%3],sx,rTop+25);
-    rCtx.fillText(['🌳','🌲','🏪'][(i+1)%3],w-sx+20,rTop+25);
-  }
-  
-  // Obstacles
-  rObs.forEach(o=>{
-    rCtx.font=(o.type==='🚂'?40:36)+'px sans-serif'; rCtx.textAlign='center';
-    // Shadow
-    rCtx.fillStyle='rgba(0,0,0,0.25)';
-    rCtx.beginPath(); rCtx.ellipse(o.x,rBot-25,20,5,0,0,Math.PI*2); rCtx.fill();
-    // Obstacle
-    rCtx.fillText(o.type,o.x,rTop+25);
-  });
-  
-  // Coins with glow
-  rCoins.forEach(c=>{
-    if(c.got) return;
-    rCtx.save();
-    rCtx.shadowColor='#FFD700'; rCtx.shadowBlur=10;
-    rCtx.font='26px sans-serif'; rCtx.textAlign='center';
-    rCtx.fillText('🪙',c.x,rTop+20+Math.sin(rF*0.08+c.lane)*6);
-    rCtx.restore();
-  });
-  
-  // Stars
-  rStars.forEach(s=>{
-    if(s.got) return;
-    rCtx.save();
-    rCtx.shadowColor='#FFE600'; rCtx.shadowBlur=12;
-    rCtx.font='22px sans-serif'; rCtx.textAlign='center';
-    rCtx.fillText('⭐',s.x,rTop+15);
-    rCtx.restore();
-  });
-  
-  // Player
-  const py=rTop+10+(rJump?rY*3:0);
-  const bounce=Math.abs(Math.sin(rRunCyc))*4;
-  
-  // Shadow
-  rCtx.fillStyle=`rgba(0,0,0,${0.25-(rJump?Math.abs(rY)*0.015:0)})`;
-  const ss=rJump?0.4:1;
-  rCtx.beginPath(); rCtx.ellipse(px,rBot-22,18*ss,5*ss,0,0,Math.PI*2); rCtx.fill();
-  
-  if(rSlide){
-    rCtx.font='26px sans-serif'; rCtx.textAlign='center';
-    rCtx.fillText('🛹',px,py+6);
-    // Slide sparks
-    rCtx.fillStyle='rgba(255,200,0,0.3)';
-    for(let i=0;i<3;i++) rCtx.fillRect(px-15-i*8,py+8+i*2,4,4);
-  } else if(rJump){
-    rCtx.font='34px sans-serif'; rCtx.textAlign='center';
-    rCtx.fillText('🏃',px,py-5);
-    // Wind lines
-    rCtx.strokeStyle='rgba(255,255,255,0.15)'; rCtx.lineWidth=1;
-    for(let i=0;i<2;i++){ rCtx.beginPath(); rCtx.moveTo(px-12,py+5+i*10); rCtx.lineTo(px-25,py+5+i*10); rCtx.stroke(); }
-  } else {
-    rCtx.font='36px sans-serif'; rCtx.textAlign='center';
-    rCtx.fillText('🏃',px,py-bounce);
-    // Speed trail
-    if(rSpd>5){
-      rCtx.strokeStyle=`rgba(255,255,255,${Math.min((rSpd-5)*0.04,0.2)})`; rCtx.lineWidth=1;
-      for(let i=0;i<3;i++){ rCtx.beginPath(); rCtx.moveTo(px-10-i*6,py-bounce+3+i*4); rCtx.lineTo(px-20-i*8,py-bounce+3+i*4); rCtx.stroke(); }
-    }
-  }
-  
-  // Speed lines
-  if(rSpd>6){
-    rCtx.strokeStyle=`rgba(255,255,255,${Math.min((rSpd-6)*0.04,0.2)})`; rCtx.lineWidth=1;
-    for(let i=0;i<4;i++){ const ly=Math.random()*h*0.5; rCtx.beginPath(); rCtx.moveTo(0,ly); rCtx.lineTo(w*0.3,ly); rCtx.stroke(); }
-  }
-  
-  // Combo
-  if(rCombo>1){
-    rCtx.save();
-    rCtx.font='bold 18px sans-serif'; rCtx.textAlign='center';
-    rCtx.fillStyle='#FFE600'; rCtx.shadowColor='rgba(0,0,0,0.5)'; rCtx.shadowBlur=4;
-    rCtx.fillText('🔥 COMBO x'+rCombo,w/2,50);
-    rCtx.restore();
-  }
-  
-  // Coin counter
-  rCtx.save();
-  rCtx.font='bold 15px sans-serif'; rCtx.textAlign='right';
-  rCtx.fillStyle='#FFD700'; rCtx.shadowColor='rgba(0,0,0,0.5)'; rCtx.shadowBlur=3;
-  rCtx.fillText('🪙 '+rTotCoins,w-12,50);
-  rCtx.restore();
-  
-  // Particles
-  if(particles.length>0){
-    particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.3; p.life--; });
-    particles=particles.filter(p=>p.life>0);
-    particles.forEach(p=>{ rCtx.globalAlpha=p.life/20; rCtx.font='14px sans-serif'; rCtx.textAlign='center'; rCtx.fillText('✨',p.x,p.y); rCtx.globalAlpha=1; });
-  }
-  
-  rAnim = requestAnimationFrame(loop);
-}
-
-// Particles
-let particles = [];
-function spawnParticles(x,y){
-  for(let i=0;i<5;i++) particles.push({x,y,vx:(Math.random()-0.5)*5,vy:-Math.random()*7-2,life:18});
 }
 
 function gameOver(){
-  rRun=false; rOver=true;
-  if(rAnim) cancelAnimationFrame(rAnim);
+  run = false; over = true;
+  if(anim) cancelAnimationFrame(anim);
   document.getElementById('runnerOverlay').classList.remove('hidden');
-  const bonus=rTotCoins*5;
-  document.getElementById('runnerTitle').textContent='💥 GAME OVER';
-  document.getElementById('runnerFinalScore').innerHTML=`PONTOS: ${rScore} + 🪙${bonus} = <strong>${rScore+bonus}</strong>`;
-  document.querySelector('#runnerOverlay .ro-btn').textContent='🔄 JOGAR DE NOVO';
-  if(rScore+bonus>30) celebrar();
-  document.onkeydown=null;
+  const total = score + coins * 5;
+  document.getElementById('runnerTitle').textContent = '💥 GAME OVER';
+  document.getElementById('runnerFinalScore').innerHTML = `SCORE: ${score} + 🪙${coins*5} = <strong>${total}</strong>`;
+  document.querySelector('#runnerOverlay .ro-btn').textContent = '🔄 JOGAR DE NOVO';
+  if(total > 50) celebrar();
+  document.onkeydown = null;
 }
 
 function restartRunner(){
-  if(rAnim) cancelAnimationFrame(rAnim);
+  if(anim) cancelAnimationFrame(anim);
   startRunner();
 }
