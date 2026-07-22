@@ -356,19 +356,91 @@ function draw(){
   ctx.globalAlpha=1;
   particles=particles.filter(p=>p.life>0);
   
-  // Player
+  // Player - Pixel Art Mario
   let px=player.x-camera, py=player.y;
   if(player.inv>0&&Math.floor(player.inv/4)%2===0) return;
   
-  ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.beginPath(); ctx.ellipse(px+12,GROUND_Y_ROW*T+4,14,3,0,0,Math.PI*2); ctx.fill();
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.12)';
+  ctx.beginPath(); ctx.ellipse(px+12,GROUND_Y_ROW*T+4,14,3,0,0,Math.PI*2); ctx.fill();
   
+  // Draw pixel Mario
   ctx.save();
-  if(player.facing<0) ctx.scale(-1,1);
-  let dx=player.facing<0?-px-player.w:px;
+  if(player.facing<0){ ctx.translate(px+24,0); ctx.scale(-1,1); ctx.translate(-px,0); }
   
-  if(player.ducking&&player.onGround){ ctx.font='22px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏃',dx+12,py+22); }
-  else if(!player.onGround){ ctx.font='28px sans-serif'; ctx.textAlign='center'; ctx.fillText('🏃',dx+12,py+22); }
-  else { ctx.font='26px sans-serif'; ctx.textAlign='center'; ctx.fillText(Math.floor(Date.now()/150)%2===0?'🏃':'🚶',dx+12,py+24); }
+  let mX=px, mY=py;
+  let charW=24, charH=player.ducking&&player.onGround?20:30;
+  
+  if(player.ducking&&player.onGround){ mY+=10; charH=20; }
+  
+  // Body (red shirt)
+  ctx.fillStyle='#e83030';
+  ctx.fillRect(mX+4,mY+10,16,10);
+  
+  // Overall straps (blue)
+  ctx.fillStyle='#3040f0';
+  ctx.fillRect(mX+6,mY+14,4,6);
+  ctx.fillRect(mX+14,mY+14,4,6);
+  
+  // Head (skin)
+  ctx.fillStyle='#f0b080';
+  ctx.fillRect(mX+6,mY,12,10);
+  
+  // Hat (red)
+  ctx.fillStyle='#e83030';
+  ctx.fillRect(mX+4,mY-2,16,5);
+  ctx.fillRect(mX+2,mY+1,20,3);
+  
+  // Hat brim
+  ctx.fillStyle='#d02020';
+  ctx.fillRect(mX+2,mY+1,20,2);
+  
+  // Eyes
+  ctx.fillStyle='#000';
+  ctx.fillRect(mX+8,mY+4,3,3);
+  ctx.fillRect(mX+13,mY+4,3,3);
+  
+  // Mustache (brown)
+  ctx.fillStyle='#5a3a1a';
+  ctx.fillRect(mX+7,mY+8,10,2);
+  
+  // Legs
+  ctx.fillStyle='#3040f0';
+  if(!player.onGround){
+    // Jump pose - legs apart
+    ctx.fillRect(mX+4,mY+20,7,8);
+    ctx.fillRect(mX+13,mY+20,7,6);
+  } else if(Math.floor(Date.now()/150)%2===0){
+    // Running step 1
+    ctx.fillRect(mX+4,mY+20,7,8);
+    ctx.fillRect(mX+13,mY+20,7,6);
+  } else {
+    // Running step 2
+    ctx.fillRect(mX+4,mY+20,7,6);
+    ctx.fillRect(mX+13,mY+20,7,8);
+  }
+  
+  // Shoes (brown)
+  ctx.fillStyle='#6a3a1a';
+  if(player.ducking&&player.onGround){
+    ctx.fillRect(mX+4,mY+26,7,3);
+    ctx.fillRect(mX+13,mY+26,7,3);
+  } else {
+    ctx.fillRect(mX+3,mY+26,8,4);
+    ctx.fillRect(mX+13,mY+26,8,4);
+  }
+  
+  // Arms (skin)
+  ctx.fillStyle='#f0b080';
+  if(!player.onGround){
+    // Arms up when jumping
+    ctx.fillRect(mX-2,mY+8,6,4);
+    ctx.fillRect(mX+20,mY+8,6,4);
+  } else {
+    ctx.fillRect(mX-1,mY+12,5,6);
+    ctx.fillRect(mX+20,mY+12,5,6);
+  }
+  
   ctx.restore();
 }
 
@@ -458,3 +530,5 @@ function showWorlds(){
 }
 
 document.addEventListener('DOMContentLoaded',showWorlds);
+// Also call directly in case DOM already loaded
+if(document.readyState==='complete'||document.readyState==='interactive') showWorlds();
